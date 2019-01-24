@@ -1,0 +1,19 @@
+<!doctype html>
+
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <title>WASM test</title>
+  </head>
+
+  <body onload="startGame()">
+    <h1>Welcome to the game of life</h1>
+    <button id="play-pause-button" onClick="playPause()">Play/Pause</button>
+    <button id="step-button" onClick="step()">Step</button>
+    <canvas id="game-of-life-canvas">
+    </canvas>
+    <script charset="utf-8" src="build/game_of_life.js"></script>
+    <script charset="utf-8" src="game_of_life.js"></script>
+  </body>
+</html>
