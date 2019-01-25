@@ -4,6 +4,8 @@ export function __wbg_world_free(a: number): void;
 export function world_get_index(a: number, b: number, c: number): number;
 export function world_get(a: number, b: number, c: number): number;
 export function world_set(a: number, b: number, c: number, d: number): void;
+export function world_clear(a: number): void;
+export function world_toggle(a: number, b: number, c: number): void;
 export function world_cells(a: number): number;
 export function world_alive_neighbors(a: number, b: number, c: number): number;
 export function world_tick(a: number): void;

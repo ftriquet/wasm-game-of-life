@@ -58,6 +58,18 @@ impl World {
         self.cache[idx] = t;
     }
 
+    pub fn clear(&mut self) {
+        self.cells.iter_mut().for_each(|cell| *cell = Cell::Dead);
+    }
+
+    pub fn toggle(&mut self, row: i32, col: i32) {
+        let idx = self.get_index(row, col) as usize;
+        self.cache[idx] = match self.cache[idx] {
+            Cell::Dead => Cell::Alive,
+            Cell::Alive => Cell::Dead
+        }
+    }
+
     pub fn cells(&self) -> *const Cell {
         self.cells.as_ptr()
     }

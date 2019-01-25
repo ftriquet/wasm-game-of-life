@@ -91,6 +91,20 @@
             return wasm.world_set(this.ptr, arg0, arg1, arg2);
         }
         /**
+        * @returns {void}
+        */
+        clear() {
+            return wasm.world_clear(this.ptr);
+        }
+        /**
+        * @param {number} arg0
+        * @param {number} arg1
+        * @returns {void}
+        */
+        toggle(arg0, arg1) {
+            return wasm.world_toggle(this.ptr, arg0, arg1);
+        }
+        /**
         * @returns {number}
         */
         cells() {

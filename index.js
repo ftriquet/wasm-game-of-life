@@ -1,22 +1,34 @@
-const CELL_SIZE = 4;
+const CELL_SIZE = 10;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
-const HEIGHT = 100;
-const WIDTH = 100;
+const HEIGHT = 80;
+const WIDTH = 160;
 
 // wasm_bindgen wrapper classes. Will be set
 // after instanciation of the wasm module.
 let Cell;
 let World;
 
-let RUNNING = true;
+
+let animationId = null;
+let render;
+
+
+// Button callbacks
+let step;
 
 const playPause = () => {
-  RUNNING = !RUNNING
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  } else {
+    render()
+  }
 }
 
-let step;
+let clearWorld;
+
 
 const drawGrid = (ctx) => {
   ctx.beginPath();
@@ -87,19 +99,23 @@ const startGame = () => {
 
     step = () => {
       world.tick();
+      drawGrid(ctx);
+      drawCells(ctx, world);
     };
 
-    const draw = () => {
-      setTimeout(() => {
-        if (RUNNING) {
-          world.tick()
-        }
-        drawGrid(ctx);
-        drawCells(ctx, world);
-        draw();
-      }, 50);
+    render = () => {
+      world.tick()
+      drawGrid(ctx);
+      drawCells(ctx, world);
+      animationId = requestAnimationFrame(render);
     }
-    draw();
+
+    clearWorld = () => {
+      console.log('CLEAR');
+      world.clear();
+    }
+
+    render();
   }).catch(e => {
     console.error(e);
   })

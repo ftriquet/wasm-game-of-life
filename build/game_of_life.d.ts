@@ -9,6 +9,10 @@ free(): void;
 
  set(arg0: number, arg1: number, arg2: number): void;
 
+ clear(): void;
+
+ toggle(arg0: number, arg1: number): void;
+
  cells(): number;
 
  alive_neighbors(arg0: number, arg1: number): number;
