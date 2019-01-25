@@ -1,9 +1,14 @@
-const CELL_SIZE = 10;
+const CELL_SIZE = 5;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
-const HEIGHT = 80;
-const WIDTH = 160;
+const HEIGHT = 150;
+const WIDTH = 275;
+
+let tickDelay = 50;
+const updateTickDelay = n => {
+  tickDelay += n;
+};
 
 // wasm_bindgen wrapper classes. Will be set
 // after instanciation of the wasm module.
@@ -11,6 +16,7 @@ let Cell;
 let World;
 
 
+let playPlauseButton;
 let animationId = null;
 let render;
 
@@ -20,9 +26,11 @@ let step;
 
 const playPause = () => {
   if (animationId) {
+    playPauseButton.innerHTML = "Play";
     cancelAnimationFrame(animationId);
     animationId = null;
   } else {
+    playPauseButton.innerHTML = "Pause";
     render()
   }
 }
@@ -49,12 +57,25 @@ const drawGrid = (ctx) => {
   ctx.stroke();
 };
 
-const drawCells = (ctx, world) => {
+const getCells = (wasm, world) => {
+  const cellsPtr = world.cells();
+  const cells = new Uint32Array(wasm.memory.buffer, cellsPtr, WIDTH * HEIGHT);
+  return cells;
+};
+
+const getIndex = (row, column) => {
+  return row * WIDTH + column;
+};
+
+const drawCells = (ctx, wasm, world) => {
+  const cells = getCells(wasm, world);
+  console.log(cells);
   ctx.beginPath();
 
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
-      const cell = world.get(row, col);
+      const index = getIndex(row, col);
+      const cell = cells[index];
 
       ctx.fillStyle = cell === Cell.Dead
         ? DEAD_COLOR
@@ -72,13 +93,6 @@ const drawCells = (ctx, world) => {
   ctx.stroke();
 }
 
-const getCellsData = (world, wasmMemory) => {
-  // Get address of cells array in wasm linear memory
-  const cellsAddr = world.cells();
-  // Instanciate js buffer from address and size
-  const cells = new Uint8Array(wasmMemory.buffer, cellsAddr, WIDTH * HEIGHT);
-}
-
 const loadWasm = () => gameOfLife("build/game_of_life_bg.wasm").then(() => gameOfLife)
 
 
@@ -94,8 +108,7 @@ const startGame = () => {
 
     const ctx = canvas.getContext('2d');
 
-    drawGrid(ctx);
-    drawCells(ctx, world);
+    playPauseButton = document.getElementById("play-pause-button");
 
     step = () => {
       world.tick();
@@ -104,12 +117,13 @@ const startGame = () => {
 
     const draw = () => {
       drawGrid(ctx);
-      drawCells(ctx, world);
+      drawCells(ctx, game.wasm, world);
     }
 
+    draw();
+
     render = () => {
-      world.tick()
-      step();
+      draw();
       animationId = requestAnimationFrame(render);
     }
 
@@ -117,6 +131,16 @@ const startGame = () => {
       world.clear();
       draw();
     }
+
+    const tick = () => {
+      setTimeout(() => {
+        if (animationId) {
+          world.tick();
+        }
+        tick();
+      }, tickDelay);
+    };
+    tick();
 
     canvas.addEventListener("click", event => {
       const boundingRect = canvas.getBoundingClientRect();
@@ -129,16 +153,11 @@ const startGame = () => {
 
       const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), HEIGHT - 1);
       const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), WIDTH - 1);
-
-      
       console.log(row, col);
-      console.log(world.get(row, col));
-      world.toggle(row, col);
-      console.log(world.get(row, col));
-      console.log('mdr');
 
-      drawGrid(ctx);
-      drawCells(ctx, world);
+      world.toggle(row, col);
+
+      draw();
     });
   }).catch(e => {
     console.error(e);
