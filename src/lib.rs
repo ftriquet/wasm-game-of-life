@@ -64,7 +64,7 @@ impl World {
 
     pub fn toggle(&mut self, row: i32, col: i32) {
         let idx = self.get_index(row, col) as usize;
-        self.cache[idx] = match self.cache[idx] {
+        self.cells[idx] = match self.cells[idx] {
             Cell::Dead => Cell::Alive,
             Cell::Alive => Cell::Dead
         }

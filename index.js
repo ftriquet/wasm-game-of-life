@@ -99,23 +99,47 @@ const startGame = () => {
 
     step = () => {
       world.tick();
+      draw();
+    };
+
+    const draw = () => {
       drawGrid(ctx);
       drawCells(ctx, world);
-    };
+    }
 
     render = () => {
       world.tick()
-      drawGrid(ctx);
-      drawCells(ctx, world);
+      step();
       animationId = requestAnimationFrame(render);
     }
 
     clearWorld = () => {
-      console.log('CLEAR');
       world.clear();
+      draw();
     }
 
-    render();
+    canvas.addEventListener("click", event => {
+      const boundingRect = canvas.getBoundingClientRect();
+
+      const scaleX = canvas.width / boundingRect.width;
+      const scaleY = canvas.height / boundingRect.height;
+
+      const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+      const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+
+      const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), HEIGHT - 1);
+      const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), WIDTH - 1);
+
+      
+      console.log(row, col);
+      console.log(world.get(row, col));
+      world.toggle(row, col);
+      console.log(world.get(row, col));
+      console.log('mdr');
+
+      drawGrid(ctx);
+      drawCells(ctx, world);
+    });
   }).catch(e => {
     console.error(e);
   })
