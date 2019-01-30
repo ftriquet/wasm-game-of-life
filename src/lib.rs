@@ -9,41 +9,37 @@ use console_error_panic_hook;
 
 use wasm_bindgen::prelude::*;
 
-use regex;
-use regex::Regex;
-
-pub fn parse_ints(x: &str, y: &str) -> Result<(i32, i32), String> {
-    x.parse().and_then(|xi| y.parse::<i32>().map(|yi| (xi, yi))).map_err(|e| e.to_string())
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace=console)]
+    fn log(s: &str);
 }
 
-pub fn parse_first_line(input: &str) -> Result<(i32, i32), String> {
-    let r = Regex::new(r"x = (\d+), y = (\d+).*").unwrap();
-    if let Some(captures) = r.captures_iter(input).next() {
-        captures.get(1)
-            .and_then(|x| captures.get(2).map(|y| (x, y)))
-            .ok_or_else(|| "Invalid input".to_string())
-            .and_then(|(x, y)| parse_ints(x.as_str(), y.as_str()))
-    } else {
-        Err("Invalid input".to_string())
+fn parse_plaintext(s: &str) -> Pattern {
+    let width = s.lines().next().unwrap().len();
+    let height = s.lines().count();
+    let cells = s.chars().filter(|&c| c != '\n').map(|c| {
+        Cell::from(c)
+    }).collect::<Vec<_>>();
+
+    Pattern {
+        width: width as i32,
+        height: height as i32,
+        cells
     }
 }
 
-pub fn rle_parse(s: String) -> Result<Pattern, String> {
-    let mut lines = s.lines();
-    let header = lines.next().ok_or_else(|| "Empty pattern".to_string())?;
-    parse_first_line(header).map(|(w, h)| {
-        Pattern {
-            width: w,
-            height: h,
-            cells: vec![Cell::Dead; (w * h) as usize]
-        }
-    })
-}
-
+#[derive(Debug)]
 pub struct Pattern {
     width: i32,
     height: i32,
     cells: Vec<Cell>,
+}
+
+#[wasm_bindgen]
+pub enum SurfaceMode {
+    Finite,
+    Tore
 }
 
 #[wasm_bindgen]
@@ -52,6 +48,7 @@ pub struct World {
     height: i32,
     cells: Vec<Cell>,
     cache: Vec<Cell>,
+    mode: SurfaceMode,
 }
 
 
@@ -63,10 +60,31 @@ pub enum Cell {
     Alive = 1,
 }
 
+impl ::std::convert::From<char> for Cell {
+    fn from(c: char) -> Self {
+        match c {
+            '.' => Cell::Dead,
+            'o' | 'O' => Cell::Alive,
+            _ => {
+                panic!("Invalid character: {}", c)
+            }
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl World {
-    pub fn load_rle_at(&mut self, row: i32, col: i32, pattern: String) {
+    pub fn set_mode(&mut self, mode: SurfaceMode) {
+        self.mode = mode;
+    }
 
+    pub fn load_plaintext(&mut self, row: i32, col: i32, s: String) {
+        let pattern = parse_plaintext(&s);
+        for i in 0..pattern.height {
+            for j in 0..pattern.width {
+                self.set_cell(row + i, col + j, pattern.cells[(i * pattern.width + j) as usize]);
+            }
+        }
     }
 
     pub fn get_index(&self, mut row: i32, mut col: i32) -> i32 {
@@ -79,6 +97,11 @@ impl World {
 
     pub fn get(&self, row: i32, col: i32) -> Cell {
         self.cells[self.get_index(row, col) as usize]
+    }
+
+    pub fn set_cell(&mut self, row: i32, col: i32, t: Cell) {
+        let idx = self.get_index(row, col) as usize;
+        self.cells[idx] = t;
     }
 
     pub fn set(&mut self, row: i32, col: i32, t: Cell) {
@@ -104,11 +127,18 @@ impl World {
 
     pub fn alive_neighbors(&self, row: i32, col: i32) -> u8 {
         let check_out_of_bounds = |r, c| {
-            if row + r > 0 && row + r < self.height &&
-                col + c > 0 && col + c < self.width {
-                self.get(row + r, col + c) as u8
-            } else {
-                0
+            match self.mode {
+                SurfaceMode::Tore => {
+                    self.get(row + r, col + c) as u8
+                },
+                SurfaceMode::Finite => {
+                    if row + r >= 0 && row + r < self.height &&
+                        col + c >= 0 && col + c < self.width {
+                            self.get(row + r, col + c) as u8
+                        } else {
+                            0
+                        }
+                }
             }
         };
         let indexes = [
@@ -149,22 +179,14 @@ impl World {
     pub fn new(width: i32, height: i32) -> World {
         console_error_panic_hook::set_once();
 
-        // let data= vec![Cell::Dead; width * height];
-        let data: Vec<Cell> = (0..width * height)
-            .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect();
+        let data= vec![Cell::Dead; (width * height) as usize];
 
         World {
             width,
             height,
             cells: data.clone(),
             cache: data,
+            mode: SurfaceMode::Finite,
         }
     }
 

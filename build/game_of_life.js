@@ -3,9 +3,12 @@
     const __exports = {};
     /**
     */
+    __exports.SurfaceMode = Object.freeze({ Finite:0,Tore:1, });
+    /**
+    */
     __exports.Cell = Object.freeze({ Dead:0,Alive:1, });
 
-    let cachedTextDecoder = new TextDecoder('utf-8');
+    let cachedTextEncoder = new TextEncoder('utf-8');
 
     let cachegetUint8Memory = null;
     function getUint8Memory() {
@@ -14,6 +17,19 @@
         }
         return cachegetUint8Memory;
     }
+
+    let WASM_VECTOR_LEN = 0;
+
+    function passStringToWasm(arg) {
+
+        const buf = cachedTextEncoder.encode(arg);
+        const ptr = wasm.__wbindgen_malloc(buf.length);
+        getUint8Memory().set(buf, ptr);
+        WASM_VECTOR_LEN = buf.length;
+        return ptr;
+    }
+
+    let cachedTextDecoder = new TextDecoder('utf-8');
 
     function getStringFromWasm(ptr, len) {
         return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
@@ -67,6 +83,24 @@
 
         /**
         * @param {number} arg0
+        * @returns {void}
+        */
+        set_mode(arg0) {
+            return wasm.world_set_mode(this.ptr, arg0);
+        }
+        /**
+        * @param {number} arg0
+        * @param {number} arg1
+        * @param {string} arg2
+        * @returns {void}
+        */
+        load_plaintext(arg0, arg1, arg2) {
+            const ptr2 = passStringToWasm(arg2);
+            const len2 = WASM_VECTOR_LEN;
+            return wasm.world_load_plaintext(this.ptr, arg0, arg1, ptr2, len2);
+        }
+        /**
+        * @param {number} arg0
         * @param {number} arg1
         * @returns {number}
         */
@@ -80,6 +114,15 @@
         */
         get(arg0, arg1) {
             return wasm.world_get(this.ptr, arg0, arg1);
+        }
+        /**
+        * @param {number} arg0
+        * @param {number} arg1
+        * @param {number} arg2
+        * @returns {void}
+        */
+        set_cell(arg0, arg1, arg2) {
+            return wasm.world_set_cell(this.ptr, arg0, arg1, arg2);
         }
         /**
         * @param {number} arg0

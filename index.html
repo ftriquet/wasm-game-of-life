@@ -5,16 +5,49 @@
   <head>
     <meta charset="utf-8">
     <title>WASM test</title>
+    <style type="text/css" media="screen">
+html, body {
+    margin: 0;
+    height: 100%;
+}
+#main-container {
+  display: flex;
+}
+#panel {
+  flex: 0 0 100px;
+}
+#playground {
+  flex: 1;
+}
+#panel button, #panel select {
+  display: block;
+  margin: 5px;
+}
+#game-of-life-canvas {
+  padding: 5px;
+}
+    </style>
   </head>
 
-  <body onload="startGame()">
-    <button id="play-pause-button" onClick="playPause()">Play</button>
-    <button id="step-button" onClick="step()">Step</button>
-    <button id="clear" onClick="clearWorld()">Clear</button>
-    <button id="incrementTickDelay" onClick="updateTickDelay(10)">Speed -</button>
-    <button id="decrementTickDelay" onClick="updateTickDelay(-10)">Speed +</button>
-    <canvas id="game-of-life-canvas"></canvas>
-    <script charset="utf-8" src="build/game_of_life.js"></script>
-    <script charset="utf-8" src="index.js"></script>
+  <body onload="startGame()" onresize="resizePlayground()">
+    <div id="main-container">
+      <div id="panel">
+        <button id="play-pause-button" onclick="playPause()">Play</button>
+        <button id="step-button" onclick="step()">Step</button>
+        <button id="clear" onclick="clearWorld()">Clear</button>
+        <button id="incrementTickDelay" onclick="updateTickDelay(10)">Speed -</button>
+        <button id="decrementTickDelay" onclick="updateTickDelay(-10)">Speed +</button>
+        <button id="loadPlainText" onclick="loadTextArea()">Load</button>
+        <select id="surface-mode-select">
+          <option value="Finite">Finite</option>
+          <option value="Tore">Tore</option>
+        </select>
+        <div id="generations"></div>
+        <!-- <textarea id="user-input"></textarea> -->
+      </div>
+      <canvas id="game-of-life-canvas"></canvas>
+      <script charset="utf-8" src="build/game_of_life.js"></script>
+      <script charset="utf-8" src="index.js"></script>
+    </div>
   </body>
 </html>

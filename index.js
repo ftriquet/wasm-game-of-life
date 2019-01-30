@@ -2,24 +2,35 @@ const CELL_SIZE = 5;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
-const HEIGHT = 150;
-const WIDTH = 275;
+
+const PANEL_SIZE = 100; // px
+
+let HEIGHT;
+let WIDTH;
+
+let resizePlayground;
+let generations = 0;
 
 let tickDelay = 50;
 const updateTickDelay = n => {
   tickDelay += n;
+  if (tickDelay < 10) {
+    tickDelay = 10;
+  }
 };
 
 // wasm_bindgen wrapper classes. Will be set
 // after instanciation of the wasm module.
 let Cell;
 let World;
+let SurfaceMode;
 
 
 let playPlauseButton;
 let animationId = null;
 let render;
 
+let loadTextArea;
 
 // Button callbacks
 let step;
@@ -69,7 +80,6 @@ const getIndex = (row, column) => {
 
 const drawCells = (ctx, wasm, world) => {
   const cells = getCells(wasm, world);
-  console.log(cells);
   ctx.beginPath();
 
   for (let row = 0; row < HEIGHT; row++) {
@@ -100,7 +110,8 @@ const startGame = () => {
   loadWasm().then(game => {
     Cell = game.Cell;
     World = game.World;
-    const world = World.new(WIDTH, HEIGHT);
+    SurfaceMode = game.SurfaceMode;
+    let world = World.new(0, 0);
 
     const canvas = document.getElementById("game-of-life-canvas");
     canvas.height = (CELL_SIZE + 1) * HEIGHT + 1;
@@ -116,6 +127,7 @@ const startGame = () => {
     };
 
     const draw = () => {
+      document.getElementById('generations').innerHTML = generations;
       drawGrid(ctx);
       drawCells(ctx, game.wasm, world);
     }
@@ -127,14 +139,29 @@ const startGame = () => {
       animationId = requestAnimationFrame(render);
     }
 
+    resizePlayground = () => {
+      bodyWidth = document.body.clientWidth - PANEL_SIZE;
+      bodyHeight = document.body.clientHeight;
+      canvas.height = bodyHeight;
+      canvas.width = bodyWidth
+      HEIGHT = Math.floor(bodyHeight / (CELL_SIZE + 1)) - 2;
+      WIDTH = Math.floor(bodyWidth / (CELL_SIZE + 1)) - 1;
+      world = World.new(WIDTH, HEIGHT);
+      draw();
+    }
+
+    resizePlayground();
+
     clearWorld = () => {
       world.clear();
+      generations = 0;
       draw();
     }
 
     const tick = () => {
       setTimeout(() => {
         if (animationId) {
+          generations += 1;
           world.tick();
         }
         tick();
@@ -142,23 +169,41 @@ const startGame = () => {
     };
     tick();
 
+    loadTextArea = () => {
+      const ta = document.getElementById("user-input");
+      const content = ta.value;
+      world.load_plaintext(10, 10, content);
+      draw();
+    };
+
     canvas.addEventListener("click", event => {
+      draw();
       const boundingRect = canvas.getBoundingClientRect();
 
-      const scaleX = canvas.width / boundingRect.width;
-      const scaleY = canvas.height / boundingRect.height;
+      // -10 for padding
+      const scaleX = (canvas.width - 10) / boundingRect.width;
+      const scaleY = (canvas.height - 10) / boundingRect.height;
 
       const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
       const canvasTop = (event.clientY - boundingRect.top) * scaleY;
 
       const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), HEIGHT - 1);
       const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), WIDTH - 1);
-      console.log(row, col);
 
       world.toggle(row, col);
 
       draw();
     });
+
+    const mode_selector = document.getElementById("surface-mode-select")
+    world.set_mode(SurfaceMode[mode_selector.value]);
+    mode_selector.addEventListener('change', (a, b) => {
+        if (a.target.value == 'Tore') {
+          world.set_mode(SurfaceMode.Tore);
+        } else {
+          world.set_mode(SurfaceMode.Finite);
+        }
+      })
   }).catch(e => {
     console.error(e);
   })
