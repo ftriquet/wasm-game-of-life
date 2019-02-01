@@ -15,6 +15,39 @@ extern "C" {
     fn log(s: &str);
 }
 
+use crate::Cell::*;
+const PULSAR: [Cell; 195] = [
+    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead , Dead ,
+    Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead , Dead ,
+    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
+    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
+    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
+    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead, Dead,
+    Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead, Dead,
+    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead, Dead,
+    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
+    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
+    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
+    Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead, Dead,
+    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead, Dead,
+];
+const PULSAR_ROWS: usize = 13;
+const PULSAR_COLS: usize = 15;
+
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum Figure {
+    Pulsar,
+}
+
+impl Figure {
+    pub fn data(self) -> (usize, usize, &'static [Cell]) {
+        match self {
+            Figure::Pulsar => (PULSAR_ROWS, PULSAR_COLS, &PULSAR)
+        }
+    }
+}
+
 fn parse_plaintext(s: &str) -> Pattern {
     let width = s.lines().next().unwrap().len();
     let height = s.lines().count();
@@ -39,7 +72,7 @@ pub struct Pattern {
 #[wasm_bindgen]
 pub enum SurfaceMode {
     Finite,
-    Tore
+    Torus
 }
 
 #[wasm_bindgen]
@@ -49,6 +82,7 @@ pub struct World {
     cells: Vec<Cell>,
     cache: Vec<Cell>,
     mode: SurfaceMode,
+    generations: u32,
 }
 
 
@@ -87,6 +121,17 @@ impl World {
         }
     }
 
+    pub fn load_figure(&mut self, row: i32, col: i32, figure: Figure) {
+        let (rows, cols, data) = figure.data();
+        let mut data = data.iter().cloned();
+        for i in 0..rows {
+            for j in 0..cols {
+                let current_cell = data.next().expect("Invalid figure size constant");
+                self.set_cell(row + i as i32, col + j as i32, current_cell);
+            }
+        }
+    }
+
     pub fn get_index(&self, mut row: i32, mut col: i32) -> i32 {
         if row < 0 { row = self.height + row };
         if col < 0 { col = self.width + col };
@@ -102,6 +147,10 @@ impl World {
     pub fn set_cell(&mut self, row: i32, col: i32, t: Cell) {
         let idx = self.get_index(row, col) as usize;
         self.cells[idx] = t;
+    }
+
+    pub fn generations(&self) -> u32 {
+        self.generations
     }
 
     pub fn set(&mut self, row: i32, col: i32, t: Cell) {
@@ -128,7 +177,7 @@ impl World {
     pub fn alive_neighbors(&self, row: i32, col: i32) -> u8 {
         let check_out_of_bounds = |r, c| {
             match self.mode {
-                SurfaceMode::Tore => {
+                SurfaceMode::Torus => {
                     self.get(row + r, col + c) as u8
                 },
                 SurfaceMode::Finite => {
@@ -172,6 +221,7 @@ impl World {
                 self.set(row, col, next_cell);
             }
         }
+        self.generations += 1;
 
         ::std::mem::swap(&mut self.cells, &mut self.cache);
     }
@@ -187,6 +237,7 @@ impl World {
             cells: data.clone(),
             cache: data,
             mode: SurfaceMode::Finite,
+            generations: 0,
         }
     }
 

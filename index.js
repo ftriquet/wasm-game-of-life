@@ -1,4 +1,4 @@
-const CELL_SIZE = 5;
+const CELL_SIZE = 10;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
@@ -24,6 +24,8 @@ const updateTickDelay = n => {
 let Cell;
 let World;
 let SurfaceMode;
+
+let loadFigure;
 
 
 let playPlauseButton;
@@ -111,7 +113,19 @@ const startGame = () => {
     Cell = game.Cell;
     World = game.World;
     SurfaceMode = game.SurfaceMode;
+    Figure = game.Figure;
+
+    const selectFigure = document.getElementById("load-figure");
+    for (const figure in Figure) {
+      selectFigure.options[selectFigure.options.length] = new Option(figure);
+    }
+
     let world = World.new(0, 0);
+
+    selectFigure.addEventListener('input', (a, b) => {
+      world.load_figure(10, 10, Figure[a.target.value]);
+      draw();
+    })
 
     const canvas = document.getElementById("game-of-life-canvas");
     canvas.height = (CELL_SIZE + 1) * HEIGHT + 1;
@@ -127,7 +141,7 @@ const startGame = () => {
     };
 
     const draw = () => {
-      document.getElementById('generations').innerHTML = generations;
+      document.getElementById('generations').innerHTML = world.generations();
       drawGrid(ctx);
       drawCells(ctx, game.wasm, world);
     }
@@ -169,23 +183,15 @@ const startGame = () => {
     };
     tick();
 
-    loadTextArea = () => {
-      const ta = document.getElementById("user-input");
-      const content = ta.value;
-      world.load_plaintext(10, 10, content);
-      draw();
-    };
-
     canvas.addEventListener("click", event => {
       draw();
       const boundingRect = canvas.getBoundingClientRect();
 
-      // -10 for padding
-      const scaleX = (canvas.width - 10) / boundingRect.width;
-      const scaleY = (canvas.height - 10) / boundingRect.height;
+      const scaleX = (canvas.width) / boundingRect.width;
+      const scaleY = (canvas.height) / boundingRect.height;
 
-      const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
-      const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+      const canvasLeft = (event.clientX - boundingRect.left - 6) * scaleX;
+      const canvasTop = (event.clientY - boundingRect.top - 6) * scaleY;
 
       const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), HEIGHT - 1);
       const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), WIDTH - 1);
@@ -198,8 +204,8 @@ const startGame = () => {
     const mode_selector = document.getElementById("surface-mode-select")
     world.set_mode(SurfaceMode[mode_selector.value]);
     mode_selector.addEventListener('change', (a, b) => {
-        if (a.target.value == 'Tore') {
-          world.set_mode(SurfaceMode.Tore);
+        if (a.target.value == 'Torus') {
+          world.set_mode(SurfaceMode.Torus);
         } else {
           world.set_mode(SurfaceMode.Finite);
         }

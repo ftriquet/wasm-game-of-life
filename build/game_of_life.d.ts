@@ -1,5 +1,6 @@
 /* tslint:disable */
-export enum SurfaceMode {Finite,Tore,}
+export enum Figure {Pulsar,}
+export enum SurfaceMode {Finite,Torus,}
 export enum Cell {Dead,Alive,}
 export class World {
 free(): void;
@@ -8,11 +9,15 @@ free(): void;
 
  load_plaintext(arg0: number, arg1: number, arg2: string): void;
 
+ load_figure(arg0: number, arg1: number, arg2: number): void;
+
  get_index(arg0: number, arg1: number): number;
 
  get(arg0: number, arg1: number): number;
 
  set_cell(arg0: number, arg1: number, arg2: number): void;
+
+ generations(): number;
 
  set(arg0: number, arg1: number, arg2: number): void;
 

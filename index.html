@@ -15,12 +15,10 @@ html, body {
 }
 #panel {
   flex: 0 0 100px;
+  display:flex;
+  flex-direction: column;
 }
-#playground {
-  flex: 1;
-}
-#panel button, #panel select {
-  display: block;
+#panel > * {
   margin: 5px;
 }
 #game-of-life-canvas {
@@ -37,13 +35,14 @@ html, body {
         <button id="clear" onclick="clearWorld()">Clear</button>
         <button id="incrementTickDelay" onclick="updateTickDelay(10)">Speed -</button>
         <button id="decrementTickDelay" onclick="updateTickDelay(-10)">Speed +</button>
-        <button id="loadPlainText" onclick="loadTextArea()">Load</button>
         <select id="surface-mode-select">
           <option value="Finite">Finite</option>
-          <option value="Tore">Tore</option>
+          <option value="Tore">Torus</option>
         </select>
-        <div id="generations"></div>
-        <!-- <textarea id="user-input"></textarea> -->
+        <select id="load-figure">
+          <option value="Pulsar">Nothing</option>
+        </select>
+        <div id="generations" style="text-align: center;"></div>
       </div>
       <canvas id="game-of-life-canvas"></canvas>
       <script charset="utf-8" src="build/game_of_life.js"></script>

@@ -3,7 +3,10 @@
     const __exports = {};
     /**
     */
-    __exports.SurfaceMode = Object.freeze({ Finite:0,Tore:1, });
+    __exports.Figure = Object.freeze({ Pulsar:0, });
+    /**
+    */
+    __exports.SurfaceMode = Object.freeze({ Finite:0,Torus:1, });
     /**
     */
     __exports.Cell = Object.freeze({ Dead:0,Alive:1, });
@@ -102,6 +105,15 @@
         /**
         * @param {number} arg0
         * @param {number} arg1
+        * @param {number} arg2
+        * @returns {void}
+        */
+        load_figure(arg0, arg1, arg2) {
+            return wasm.world_load_figure(this.ptr, arg0, arg1, arg2);
+        }
+        /**
+        * @param {number} arg0
+        * @param {number} arg1
         * @returns {number}
         */
         get_index(arg0, arg1) {
@@ -123,6 +135,12 @@
         */
         set_cell(arg0, arg1, arg2) {
             return wasm.world_set_cell(this.ptr, arg0, arg1, arg2);
+        }
+        /**
+        * @returns {number}
+        */
+        generations() {
+            return wasm.world_generations(this.ptr);
         }
         /**
         * @param {number} arg0
