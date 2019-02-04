@@ -34,16 +34,36 @@ const PULSAR: [Cell; 195] = [
 const PULSAR_ROWS: usize = 13;
 const PULSAR_COLS: usize = 15;
 
+const GOOSE: [Cell; 156] = [
+    Alive , Alive , Alive , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
+    Alive , Dead  , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Alive , Alive , Dead  ,
+    Dead  , Alive , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead  , Alive ,
+    Dead  , Dead  , Dead  , Alive , Alive , Dead  , Dead , Alive , Alive , Dead  , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Dead  , Dead  , Alive , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Alive , Dead  , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Dead  , Dead  , Alive , Alive , Dead , Dead  , Dead  , Alive , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Dead  , Alive , Dead  , Alive , Dead , Alive , Alive , Dead  , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Dead  , Alive , Dead  , Alive , Dead , Dead  , Alive , Dead  , Alive , Alive , Dead  ,
+    Dead  , Dead  , Alive , Dead  , Dead  , Dead  , Dead , Alive , Alive , Dead  , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Alive , Alive , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
+    Dead  , Dead  , Alive , Alive , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
+];
+const GOOSE_ROWS: usize = 12;
+const GOOSE_COLS: usize = 13;
+
+
 #[wasm_bindgen]
 #[derive(Clone, Copy)]
 pub enum Figure {
     Pulsar,
+    Goose
 }
 
 impl Figure {
     pub fn data(self) -> (usize, usize, &'static [Cell]) {
         match self {
-            Figure::Pulsar => (PULSAR_ROWS, PULSAR_COLS, &PULSAR)
+            Figure::Pulsar => (PULSAR_ROWS, PULSAR_COLS, &PULSAR),
+            Figure::Goose => (GOOSE_ROWS, GOOSE_COLS, &GOOSE)
         }
     }
 }

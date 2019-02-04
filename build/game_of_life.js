@@ -3,7 +3,7 @@
     const __exports = {};
     /**
     */
-    __exports.Figure = Object.freeze({ Pulsar:0, });
+    __exports.Figure = Object.freeze({ Pulsar:0,Goose:1, });
     /**
     */
     __exports.SurfaceMode = Object.freeze({ Finite:0,Torus:1, });

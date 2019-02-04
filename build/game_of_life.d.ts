@@ -1,5 +1,5 @@
 /* tslint:disable */
-export enum Figure {Pulsar,}
+export enum Figure {Pulsar,Goose,}
 export enum SurfaceMode {Finite,Torus,}
 export enum Cell {Dead,Alive,}
 export class World {

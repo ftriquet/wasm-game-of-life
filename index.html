@@ -37,12 +37,13 @@ html, body {
         <button id="decrementTickDelay" onclick="updateTickDelay(-10)">Speed +</button>
         <select id="surface-mode-select">
           <option value="Finite">Finite</option>
-          <option value="Tore">Torus</option>
+          <option value="Torus">Torus</option>
         </select>
         <select id="load-figure">
           <option value="Pulsar">Nothing</option>
         </select>
         <div id="generations" style="text-align: center;"></div>
+        <div id="speed" style="text-align: center;"></div>
       </div>
       <canvas id="game-of-life-canvas"></canvas>
       <script charset="utf-8" src="build/game_of_life.js"></script>

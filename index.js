@@ -1,4 +1,4 @@
-const CELL_SIZE = 10;
+const CELL_SIZE = 3;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
@@ -10,6 +10,7 @@ let WIDTH;
 
 let resizePlayground;
 let generations = 0;
+let draw;
 
 let tickDelay = 50;
 const updateTickDelay = n => {
@@ -17,6 +18,7 @@ const updateTickDelay = n => {
   if (tickDelay < 10) {
     tickDelay = 10;
   }
+  draw();
 };
 
 // wasm_bindgen wrapper classes. Will be set
@@ -123,7 +125,7 @@ const startGame = () => {
     let world = World.new(0, 0);
 
     selectFigure.addEventListener('input', (a, b) => {
-      world.load_figure(10, 10, Figure[a.target.value]);
+      world.load_figure(50, 50, Figure[a.target.value]);
       draw();
     })
 
@@ -140,8 +142,9 @@ const startGame = () => {
       draw();
     };
 
-    const draw = () => {
+    draw = () => {
       document.getElementById('generations').innerHTML = world.generations();
+      document.getElementById('speed').innerHTML = tickDelay + ' ms';
       drawGrid(ctx);
       drawCells(ctx, game.wasm, world);
     }
