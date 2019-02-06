@@ -1,22 +1,30 @@
-const CELL_SIZE = 3;
+const CELL_SIZE = 8;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
-const ALIVE_COLOR = "#000000";
+let ALIVE_COLOR = "#f44298";
 
 const PANEL_SIZE = 100; // px
+
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
 
 let HEIGHT;
 let WIDTH;
 
 let resizePlayground;
-let generations = 0;
 let draw;
 
 let tickDelay = 50;
 const updateTickDelay = n => {
   tickDelay += n;
-  if (tickDelay < 10) {
-    tickDelay = 10;
+  if (tickDelay < 2) {
+    tickDelay = 2;
   }
   draw();
 };
@@ -33,8 +41,6 @@ let loadFigure;
 let playPlauseButton;
 let animationId = null;
 let render;
-
-let loadTextArea;
 
 // Button callbacks
 let step;
@@ -54,6 +60,7 @@ let clearWorld;
 
 
 const drawGrid = (ctx) => {
+  return;
   ctx.beginPath();
   ctx.strokeStyle = GRID_COLOR;
 
@@ -78,16 +85,61 @@ const getCells = (wasm, world) => {
   return cells;
 };
 
+const getChangedCells = (wasm, world) => {
+  const changedCellsPtr = world.changed_cells();
+  const changedCellsLen = world.changed_cells_len();
+  const cells = new Uint32Array(wasm.memory.buffer, changedCellsPtr, changedCellsLen);
+  return cells;
+};
+
 const getIndex = (row, column) => {
   return row * WIDTH + column;
 };
 
-const drawCells = (ctx, wasm, world) => {
+const fromIndex = (idx) => {
+  const col = idx % WIDTH;
+  const row = Math.floor(idx / WIDTH);
+  return [row, col];
+};
+
+const drawChangedCells = (ctx, wasm ,world) => {
+  const cells = getCells(wasm, world);
+  const cellsIndexes = getChangedCells(wasm, world);
+
+  ctx.beginPath();
+
+  for (let i = 0; i < cellsIndexes.length; i++) {
+    ALIVE_COLOR = getRandomColor();
+    let [row, col] = fromIndex(cellsIndexes[i]);
+    let index = getIndex(row, col);
+    const cell = cells[index];
+
+    ctx.fillStyle = cell === Cell.Dead
+      ? DEAD_COLOR
+      : ALIVE_COLOR;
+
+    ctx.fillRect(
+      col * (CELL_SIZE + 1) + 1,
+      row * (CELL_SIZE + 1) + 1,
+      CELL_SIZE,
+      CELL_SIZE
+    );
+  }
+
+  world.reset_changed_cells();
+  ctx.stroke();
+}
+
+const drawCells = (ctx, wasm, world, redrawAll) => {
+  if (!redrawAll) {
+    return drawChangedCells(ctx, wasm, world);
+  }
   const cells = getCells(wasm, world);
   ctx.beginPath();
 
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
+      ALIVE_COLOR = getRandomColor();
       const index = getIndex(row, col);
       const cell = cells[index];
 
@@ -125,7 +177,10 @@ const startGame = () => {
     let world = World.new(0, 0);
 
     selectFigure.addEventListener('input', (a, b) => {
-      world.load_figure(50, 50, Figure[a.target.value]);
+      if (a.target.value === 'null') {
+        return;
+      }
+      world.load_figure(Math.floor(HEIGHT / 2) - 15, Math.floor(WIDTH / 2) - 15, Figure[a.target.value]);
       draw();
     })
 
@@ -142,14 +197,15 @@ const startGame = () => {
       draw();
     };
 
-    draw = () => {
+    draw = (redrawAll) => {
       document.getElementById('generations').innerHTML = world.generations();
       document.getElementById('speed').innerHTML = tickDelay + ' ms';
+      document.getElementById('dimensions').innerHTML = `${WIDTH} x ${HEIGHT}`;
       drawGrid(ctx);
-      drawCells(ctx, game.wasm, world);
+      drawCells(ctx, game.wasm, world, redrawAll);
     }
 
-    draw();
+    draw(true);
 
     render = () => {
       draw();
@@ -171,14 +227,12 @@ const startGame = () => {
 
     clearWorld = () => {
       world.clear();
-      generations = 0;
-      draw();
+      draw(true);
     }
 
     const tick = () => {
       setTimeout(() => {
         if (animationId) {
-          generations += 1;
           world.tick();
         }
         tick();

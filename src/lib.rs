@@ -16,77 +16,41 @@ extern "C" {
 }
 
 use crate::Cell::*;
-const PULSAR: [Cell; 195] = [
-    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead , Dead ,
-    Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead , Dead ,
-    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
-    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
-    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
-    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead, Dead,
-    Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead, Dead,
-    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead, Dead,
-    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
-    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
-    Alive , Dead , Dead  , Dead  , Dead  , Alive , Dead , Alive , Dead  , Dead  , Dead  , Dead , Alive , Dead, Dead,
-    Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead, Dead,
-    Dead  , Dead , Alive , Alive , Alive , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead , Dead  , Dead, Dead,
-];
+const PULSAR: [Cell; 195] = include!("../patterns/pulsar");
 const PULSAR_ROWS: usize = 13;
 const PULSAR_COLS: usize = 15;
 
-const GOOSE: [Cell; 156] = [
-    Alive , Alive , Alive , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
-    Alive , Dead  , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Alive , Alive , Dead  ,
-    Dead  , Alive , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Alive , Alive , Alive , Dead  , Alive ,
-    Dead  , Dead  , Dead  , Alive , Alive , Dead  , Dead , Alive , Alive , Dead  , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Dead  , Dead  , Alive , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Dead  , Dead  , Dead  , Dead  , Dead , Dead  , Alive , Dead  , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Dead  , Dead  , Alive , Alive , Dead , Dead  , Dead  , Alive , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Dead  , Alive , Dead  , Alive , Dead , Alive , Alive , Dead  , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Dead  , Alive , Dead  , Alive , Dead , Dead  , Alive , Dead  , Alive , Alive , Dead  ,
-    Dead  , Dead  , Alive , Dead  , Dead  , Dead  , Dead , Alive , Alive , Dead  , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Alive , Alive , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
-    Dead  , Dead  , Alive , Alive , Dead  , Dead  , Dead , Dead  , Dead  , Dead  , Dead  , Dead  , Dead  ,
-];
+const GOOSE: [Cell; 156] = include!("../patterns/goose");
 const GOOSE_ROWS: usize = 12;
 const GOOSE_COLS: usize = 13;
+
+const GLIDER_GUN: [Cell; 324] = include!("../patterns/glider_gun");
+const GLIDER_GUN_ROWS: usize = 9;
+const GLIDER_GUN_COLS: usize = 36;
+
+const BI_GUN: [Cell; 750] = include!("../patterns/bi_gun");
+const BI_GUN_ROWS: usize = 15;
+const BI_GUN_COLS: usize = 50;
 
 
 #[wasm_bindgen]
 #[derive(Clone, Copy)]
 pub enum Figure {
     Pulsar,
-    Goose
+    Goose,
+    GliderGun,
+    BiGun,
 }
 
 impl Figure {
     pub fn data(self) -> (usize, usize, &'static [Cell]) {
         match self {
             Figure::Pulsar => (PULSAR_ROWS, PULSAR_COLS, &PULSAR),
-            Figure::Goose => (GOOSE_ROWS, GOOSE_COLS, &GOOSE)
+            Figure::Goose => (GOOSE_ROWS, GOOSE_COLS, &GOOSE),
+            Figure::GliderGun => (GLIDER_GUN_ROWS, GLIDER_GUN_COLS, &GLIDER_GUN),
+            Figure::BiGun => (BI_GUN_ROWS, BI_GUN_COLS, &BI_GUN),
         }
     }
-}
-
-fn parse_plaintext(s: &str) -> Pattern {
-    let width = s.lines().next().unwrap().len();
-    let height = s.lines().count();
-    let cells = s.chars().filter(|&c| c != '\n').map(|c| {
-        Cell::from(c)
-    }).collect::<Vec<_>>();
-
-    Pattern {
-        width: width as i32,
-        height: height as i32,
-        cells
-    }
-}
-
-#[derive(Debug)]
-pub struct Pattern {
-    width: i32,
-    height: i32,
-    cells: Vec<Cell>,
 }
 
 #[wasm_bindgen]
@@ -103,6 +67,7 @@ pub struct World {
     cache: Vec<Cell>,
     mode: SurfaceMode,
     generations: u32,
+    changed_cells: Vec<i32>,
 }
 
 
@@ -132,15 +97,6 @@ impl World {
         self.mode = mode;
     }
 
-    pub fn load_plaintext(&mut self, row: i32, col: i32, s: String) {
-        let pattern = parse_plaintext(&s);
-        for i in 0..pattern.height {
-            for j in 0..pattern.width {
-                self.set_cell(row + i, col + j, pattern.cells[(i * pattern.width + j) as usize]);
-            }
-        }
-    }
-
     pub fn load_figure(&mut self, row: i32, col: i32, figure: Figure) {
         let (rows, cols, data) = figure.data();
         let mut data = data.iter().cloned();
@@ -152,7 +108,8 @@ impl World {
         }
     }
 
-    pub fn get_index(&self, mut row: i32, mut col: i32) -> i32 {
+    #[inline(always)]
+    fn get_index(&self, mut row: i32, mut col: i32) -> i32 {
         if row < 0 { row = self.height + row };
         if col < 0 { col = self.width + col };
         let col = col % self.width;
@@ -160,12 +117,16 @@ impl World {
         (row * self.width + col)
     }
 
-    pub fn get(&self, row: i32, col: i32) -> Cell {
+    #[inline(always)]
+    fn get(&self, row: i32, col: i32) -> Cell {
         self.cells[self.get_index(row, col) as usize]
     }
 
+    #[inline(always)]
     pub fn set_cell(&mut self, row: i32, col: i32, t: Cell) {
-        let idx = self.get_index(row, col) as usize;
+        let idx = self.get_index(row, col);
+        self.changed_cells.push(idx);
+        let idx = idx as usize;
         self.cells[idx] = t;
     }
 
@@ -173,17 +134,21 @@ impl World {
         self.generations
     }
 
-    pub fn set(&mut self, row: i32, col: i32, t: Cell) {
+    #[inline(always)]
+    fn set(&mut self, row: i32, col: i32, t: Cell) {
         let idx = self.get_index(row, col) as usize;
         self.cache[idx] = t;
     }
 
     pub fn clear(&mut self) {
         self.cells.iter_mut().for_each(|cell| *cell = Cell::Dead);
+        self.reset_changed_cells();
     }
 
     pub fn toggle(&mut self, row: i32, col: i32) {
-        let idx = self.get_index(row, col) as usize;
+        let idx = self.get_index(row, col);
+        self.changed_cells.push(idx);
+        let idx = idx as usize;
         self.cells[idx] = match self.cells[idx] {
             Cell::Dead => Cell::Alive,
             Cell::Alive => Cell::Dead
@@ -194,7 +159,7 @@ impl World {
         self.cells.as_ptr()
     }
 
-    pub fn alive_neighbors(&self, row: i32, col: i32) -> u8 {
+    fn alive_neighbors(&self, row: i32, col: i32) -> u8 {
         let check_out_of_bounds = |r, c| {
             match self.mode {
                 SurfaceMode::Torus => {
@@ -226,6 +191,18 @@ impl World {
             .sum()
     }
 
+    pub fn changed_cells(&mut self) -> *const i32 {
+        self.changed_cells.as_ptr()
+    }
+
+    pub fn changed_cells_len(&self) -> usize {
+        self.changed_cells.len()
+    }
+
+    pub fn reset_changed_cells(&mut self) {
+        self.changed_cells.clear();
+    }
+
     pub fn tick(&mut self) {
         for row in 0..self.height {
             for col in 0..self.width {
@@ -238,6 +215,9 @@ impl World {
                     (Cell::Alive, 2) | (_, 3) => Cell::Alive,
                     _ => Cell::Dead,
                 };
+                if cell != next_cell {
+                    self.changed_cells.push(self.get_index(row, col));
+                }
                 self.set(row, col, next_cell);
             }
         }
@@ -249,7 +229,7 @@ impl World {
     pub fn new(width: i32, height: i32) -> World {
         console_error_panic_hook::set_once();
 
-        let data= vec![Cell::Dead; (width * height) as usize];
+        let data = vec![Cell::Dead; (width * height) as usize];
 
         World {
             width,
@@ -258,26 +238,7 @@ impl World {
             cache: data,
             mode: SurfaceMode::Finite,
             generations: 0,
+            changed_cells: Vec::new(),
         }
-    }
-
-    pub fn render(&self) -> String {
-        self.to_string()
-    }
-}
-
-use std::fmt;
-
-impl fmt::Display for World {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for line in self.cells.chunks(self.width as usize) {
-            for &cell in line {
-                let symbol = if cell == Cell::Dead { ' ' } else { '#' };
-                write!(f, "{}", symbol)?;
-            }
-            write!(f, "\n")?;
-        }
-
-        Ok(())
     }
 }

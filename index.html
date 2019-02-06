@@ -17,6 +17,7 @@ html, body {
   flex: 0 0 100px;
   display:flex;
   flex-direction: column;
+  background-color: #eeeeee;
 }
 #panel > * {
   margin: 5px;
@@ -40,10 +41,11 @@ html, body {
           <option value="Torus">Torus</option>
         </select>
         <select id="load-figure">
-          <option value="Pulsar">Nothing</option>
+          <option value="null">Nothing</option>
         </select>
         <div id="generations" style="text-align: center;"></div>
         <div id="speed" style="text-align: center;"></div>
+        <div id="dimensions" style="text-align: center;"></div>
       </div>
       <canvas id="game-of-life-canvas"></canvas>
       <script charset="utf-8" src="build/game_of_life.js"></script>
