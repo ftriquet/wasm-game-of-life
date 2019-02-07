@@ -9,6 +9,7 @@ use console_error_panic_hook;
 
 use wasm_bindgen::prelude::*;
 
+// {{{ parsing
 mod parsing {
     use nom::{
         line_ending, take_until_and_consume,
@@ -16,6 +17,7 @@ mod parsing {
         terminated, types::CompleteStr,
     };
 
+    // {{ types
     #[derive(Debug, PartialEq)]
     pub enum RleTag {
         NextLine,
@@ -44,6 +46,7 @@ mod parsing {
         Coordinates(i64, i64),
         Other(String),
     }
+    // }}}
 
     named!(
         rle_comment<CompleteStr, RleComment>,
@@ -130,8 +133,8 @@ mod parsing {
             sign: alt!(map!(tag!("-"), Some) | opt!(tag!("+"))) >>
             n: num >>
             (match sign {
-                Some(CompleteStr("-")) => n as i64,
-                _ => -(n as i64)
+                Some(CompleteStr("-")) => -(n as i64),
+                _ => (n as i64)
             })
         )
     );
@@ -418,6 +421,7 @@ mod parsing {
         #O Achim Flammenkamp
         #C A period 8 oscillator found in July 1994.
         #C www.conwaylife.com/wiki/index.php?title=Smiley
+        #R -12 30
         x = 7, y = 7, rule = 23/3
         3ob3o$bobobob2$!
         ";
@@ -427,7 +431,8 @@ mod parsing {
                     RleComment::Name("Smiley".to_string()),
                     RleComment::Author("Achim Flammenkamp".to_string()),
                     RleComment::Comment("A period 8 oscillator found in July 1994.".to_string()),
-                    RleComment::Comment("www.conwaylife.com/wiki/index.php?title=Smiley".to_string())
+                    RleComment::Comment("www.conwaylife.com/wiki/index.php?title=Smiley".to_string()),
+                    RleComment::Coordinates(-12, 30)
                 ],
                 size: RleFirstLine(7, 7),
                 content: vec![
@@ -450,6 +455,7 @@ mod parsing {
     }
     // }}}
 }
+//  }}}
 
 #[wasm_bindgen]
 extern "C" {
