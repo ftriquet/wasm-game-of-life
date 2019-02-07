@@ -1,4 +1,4 @@
-const CELL_SIZE = 8;
+const CELL_SIZE = 2;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 let ALIVE_COLOR = "#f44298";
@@ -109,7 +109,7 @@ const drawChangedCells = (ctx, wasm ,world) => {
   ctx.beginPath();
 
   for (let i = 0; i < cellsIndexes.length; i++) {
-    ALIVE_COLOR = getRandomColor();
+    // ALIVE_COLOR = getRandomColor();
     let [row, col] = fromIndex(cellsIndexes[i]);
     let index = getIndex(row, col);
     const cell = cells[index];
@@ -139,7 +139,7 @@ const drawCells = (ctx, wasm, world, redrawAll) => {
 
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
-      ALIVE_COLOR = getRandomColor();
+      // ALIVE_COLOR = getRandomColor();
       const index = getIndex(row, col);
       const cell = cells[index];
 
