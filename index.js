@@ -1,18 +1,9 @@
 const CELL_SIZE = 4;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
-let ALIVE_COLOR = "#f44298";
+const ALIVE_COLOR = "#f44298";
 
 const PANEL_SIZE = 100; // px
-
-function getRandomColor() {
-  var letters = '0123456789ABCDEF';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
 
 let HEIGHT;
 let WIDTH;
@@ -35,9 +26,6 @@ let Cell;
 let World;
 let SurfaceMode;
 
-let loadFigure;
-
-
 let playPlauseButton;
 let animationId = null;
 let render;
@@ -57,27 +45,6 @@ const playPause = () => {
 }
 
 let clearWorld;
-
-
-const drawGrid = (ctx) => {
-  return;
-  ctx.beginPath();
-  ctx.strokeStyle = GRID_COLOR;
-
-  // Vertical lines.
-  for (let i = 0; i <= WIDTH; i++) {
-    ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
-    ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * HEIGHT + 1);
-  }
-
-  // Horizontal lines.
-  for (let j = 0; j <= HEIGHT; j++) {
-    ctx.moveTo(0,                           j * (CELL_SIZE + 1) + 1);
-    ctx.lineTo((CELL_SIZE + 1) * WIDTH + 1, j * (CELL_SIZE + 1) + 1);
-  }
-
-  ctx.stroke();
-};
 
 const getCells = (wasm, world) => {
   const cellsPtr = world.cells();
@@ -109,9 +76,8 @@ const drawChangedCells = (ctx, wasm ,world) => {
   ctx.beginPath();
 
   for (let i = 0; i < cellsIndexes.length; i++) {
-    // ALIVE_COLOR = getRandomColor();
-    let [row, col] = fromIndex(cellsIndexes[i]);
-    let index = getIndex(row, col);
+    const index = cellsIndexes[i];
+    const [row, col] = fromIndex(index);
     const cell = cells[index];
 
     ctx.fillStyle = cell === Cell.Dead
@@ -139,7 +105,6 @@ const drawCells = (ctx, wasm, world, redrawAll) => {
 
   for (let row = 0; row < HEIGHT; row++) {
     for (let col = 0; col < WIDTH; col++) {
-      // ALIVE_COLOR = getRandomColor();
       const index = getIndex(row, col);
       const cell = cells[index];
 
@@ -157,6 +122,7 @@ const drawCells = (ctx, wasm, world, redrawAll) => {
   }
 
   ctx.stroke();
+  world.reset_changed_cells();
 }
 
 const loadWasm = () => gameOfLife("build/game_of_life_bg.wasm").then(() => gameOfLife)
@@ -169,19 +135,14 @@ const startGame = () => {
     SurfaceMode = game.SurfaceMode;
     Figure = game.Figure;
 
-    const selectFigure = document.getElementById("load-figure");
-    for (const figure in Figure) {
-      selectFigure.options[selectFigure.options.length] = new Option(figure);
-    }
-
     let world = World.new(100, 100);
 
+    const selectFigure = document.getElementById("load-figure");
     selectFigure.addEventListener('input', (a, b) => {
-      if (a.target.value === 'null') {
-        return;
-      }
-      world.load_figure(Math.floor(HEIGHT / 2) - 15, Math.floor(WIDTH / 2) - 15, Figure[a.target.value]);
-      draw();
+      fetch(`patterns/${a.target.value}.rle`).then(res => res.text()).then(text => {
+        world.load_string(text)
+        draw(true);
+      })
     })
 
     const canvas = document.getElementById("game-of-life-canvas");
@@ -201,7 +162,6 @@ const startGame = () => {
       document.getElementById('generations').innerHTML = world.generations();
       document.getElementById('speed').innerHTML = tickDelay + ' ms';
       document.getElementById('dimensions').innerHTML = `${WIDTH} x ${HEIGHT}`;
-      drawGrid(ctx);
       drawCells(ctx, game.wasm, world, redrawAll);
     }
 

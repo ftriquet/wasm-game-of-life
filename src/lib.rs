@@ -402,7 +402,7 @@ mod parsing {
                 Ok(())
             }
 
-            visit_dirs(Path::new("test/patterns"), |path| {
+            visit_dirs(Path::new("patterns"), |path| {
                 let mut f = fs::File::open(path).unwrap();
                 let mut s = String::new();
                 f.read_to_string(&mut s).expect(&format!("Unable to read file {:?}", path));
@@ -460,43 +460,6 @@ extern "C" {
     fn log(s: &str);
 }
 
-use crate::Cell::*;
-const PULSAR: [Cell; 195] = include!("../patterns/pulsar");
-const PULSAR_ROWS: usize = 13;
-const PULSAR_COLS: usize = 15;
-
-const GOOSE: [Cell; 156] = include!("../patterns/goose");
-const GOOSE_ROWS: usize = 12;
-const GOOSE_COLS: usize = 13;
-
-const GLIDER_GUN: [Cell; 324] = include!("../patterns/glider_gun");
-const GLIDER_GUN_ROWS: usize = 9;
-const GLIDER_GUN_COLS: usize = 36;
-
-const BI_GUN: [Cell; 750] = include!("../patterns/bi_gun");
-const BI_GUN_ROWS: usize = 15;
-const BI_GUN_COLS: usize = 50;
-
-#[wasm_bindgen]
-#[derive(Clone, Copy)]
-pub enum Figure {
-    Pulsar,
-    Goose,
-    GliderGun,
-    BiGun,
-}
-
-impl Figure {
-    pub fn data(self) -> (usize, usize, &'static [Cell]) {
-        match self {
-            Figure::Pulsar => (PULSAR_ROWS, PULSAR_COLS, &PULSAR),
-            Figure::Goose => (GOOSE_ROWS, GOOSE_COLS, &GOOSE),
-            Figure::GliderGun => (GLIDER_GUN_ROWS, GLIDER_GUN_COLS, &GLIDER_GUN),
-            Figure::BiGun => (BI_GUN_ROWS, BI_GUN_COLS, &BI_GUN),
-        }
-    }
-}
-
 #[wasm_bindgen]
 pub enum SurfaceMode {
     Finite,
@@ -538,8 +501,23 @@ fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
         _ => None
     }
 }
+
 #[wasm_bindgen]
 impl World {
+    pub fn load_string(&mut self, pattern: String) -> String {
+        let res = parsing::parse_rle(pattern.as_str().into());
+        match res {
+            Ok((_, pat)) => {
+                self.load_rle(pat);
+                "Success".to_string()
+            }
+            Err(_) => {
+                log("Failed to parse rle string");
+                "Failed to parse".to_string()
+            }
+        }
+    }
+
     fn load_rle(&mut self, rle: parsing::Rle) {
         let coords = rle.comments.iter().map(|c| {
             match c {
@@ -582,17 +560,6 @@ impl World {
 
     pub fn set_mode(&mut self, mode: SurfaceMode) {
         self.mode = mode;
-    }
-
-    pub fn load_figure(&mut self, row: i32, col: i32, figure: Figure) {
-        let (rows, cols, data) = figure.data();
-        let mut data = data.iter().cloned();
-        for i in 0..rows {
-            for j in 0..cols {
-                let current_cell = data.next().expect("Invalid figure size constant");
-                self.set_cell(row + i as i32, col + j as i32, current_cell);
-            }
-        }
     }
 
     #[inline(always)]
