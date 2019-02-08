@@ -2,5 +2,6 @@ deploy:
   script:
     - rustup target add wasm32-unknown-unknown
     - rustup toolchain install nightly
+    - rustup override set nightly
     - bash build.sh
     - cp -r * /home/admin/www/life
