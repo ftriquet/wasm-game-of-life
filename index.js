@@ -1,4 +1,4 @@
-const CELL_SIZE = 2;
+const CELL_SIZE = 4;
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 let ALIVE_COLOR = "#f44298";
@@ -174,7 +174,7 @@ const startGame = () => {
       selectFigure.options[selectFigure.options.length] = new Option(figure);
     }
 
-    let world = World.new(0, 0);
+    let world = World.new(100, 100);
 
     selectFigure.addEventListener('input', (a, b) => {
       if (a.target.value === 'null') {
@@ -205,7 +205,7 @@ const startGame = () => {
       drawCells(ctx, game.wasm, world, redrawAll);
     }
 
-    draw(true);
+    draw();
 
     render = () => {
       draw();
@@ -220,7 +220,8 @@ const startGame = () => {
       HEIGHT = Math.floor(bodyHeight / (CELL_SIZE + 1)) - 2;
       WIDTH = Math.floor(bodyWidth / (CELL_SIZE + 1)) - 1;
       world = World.new(WIDTH, HEIGHT);
-      draw();
+      draw(true);
+      world.reset_changed_cells();
     }
 
     resizePlayground();

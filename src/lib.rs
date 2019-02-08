@@ -2,9 +2,6 @@
 #![allow(dead_code)]
 #![allow(unused_attributes)]
 
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 use console_error_panic_hook;
 
 use wasm_bindgen::prelude::*;
@@ -17,7 +14,7 @@ mod parsing {
         terminated, types::CompleteStr,
     };
 
-    // {{ types
+    // {{{ types
     #[derive(Debug, PartialEq)]
     pub enum RleTag {
         NextLine,
@@ -26,16 +23,16 @@ mod parsing {
     }
 
     #[derive(Debug, PartialEq)]
-    pub struct RleFirstLine(usize, usize);
+    pub struct RleFirstLine(pub usize, pub usize);
 
     #[derive(Debug, PartialEq)]
-    pub struct RleTagSequence(usize, RleTag);
+    pub struct RleTagSequence(pub usize, pub RleTag);
 
     #[derive(Debug, PartialEq)]
     pub struct Rle {
-        comments: Vec<RleComment>,
-        size: RleFirstLine,
-        content: Vec<RleTagSequence>,
+        pub comments: Vec<RleComment>,
+        pub size: RleFirstLine,
+        pub content: Vec<RleTagSequence>,
     }
 
     #[derive(Debug, PartialEq)]
@@ -365,7 +362,7 @@ mod parsing {
     // }}}
 
     named!(
-        parse_rle<CompleteStr, Rle>,
+        pub parse_rle<CompleteStr, Rle>,
         terminated!(
             do_parse!(
                 comments: many0!(rle_comment) >>
@@ -535,8 +532,54 @@ impl ::std::convert::From<char> for Cell {
     }
 }
 
+fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
+    match o {
+        Some(Some(t)) => Some(t),
+        _ => None
+    }
+}
 #[wasm_bindgen]
 impl World {
+    fn load_rle(&mut self, rle: parsing::Rle) {
+        let coords = rle.comments.iter().map(|c| {
+            match c {
+                parsing::RleComment::Coordinates(x, y) => Some((*x, *y)),
+                _ => None
+            }
+        }).find(Option::is_some);
+        let (x, y) = flatten(coords).unwrap_or((0, 0));
+
+        let origin_x = self.width as i64/ 2;
+        let origin_y = self.height as i64/ 2;
+
+        let top_left_x = (origin_x + x) as i32;
+        let top_left_y = (origin_y + y) as i32;
+
+        let mut i = top_left_x;
+        let mut j = top_left_y;
+        rle.content.iter().for_each(|seq| {
+            match seq {
+                parsing::RleTagSequence(n, parsing::RleTag::NextLine) => {
+                    (0..*n).for_each(|_| {
+                        j += 1;
+                    });
+                    i = top_left_x;
+                },
+                parsing::RleTagSequence(n, state) => {
+                    (0..*n).for_each(|_| {
+                        let cell = match state {
+                            parsing::RleTag::Dead => Cell::Dead,
+                            parsing::RleTag::Alive => Cell::Alive,
+                            _ => unreachable!()
+                        };
+                        self.set_cell(j, i, cell);
+                        i += 1;
+                    })
+                }
+            }
+        })
+    }
+
     pub fn set_mode(&mut self, mode: SurfaceMode) {
         self.mode = mode;
     }
