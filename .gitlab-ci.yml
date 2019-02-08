@@ -1,0 +1,4 @@
+deploy:
+  script:
+    - bash build.sh
+    - cp -r * /home/admin/www/life
