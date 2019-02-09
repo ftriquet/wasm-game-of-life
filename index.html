@@ -4,7 +4,7 @@
 
   <head>
     <meta charset="utf-8">
-    <title>WASM test</title>
+    <title>Game of Life</title>
     <style type="text/css" media="screen">
 html, body {
     margin: 0;
@@ -28,7 +28,7 @@ html, body {
     </style>
   </head>
 
-  <body onload="startGame()" onresize="resizePlayground()">
+  <body onload="startGame()">
     <div id="main-container">
       <div id="panel">
         <button id="play-pause-button" onclick="playPause()">Play</button>
@@ -36,10 +36,6 @@ html, body {
         <button id="clear" onclick="clearWorld()">Clear</button>
         <button id="incrementTickDelay" onclick="updateTickDelay(10)">Speed -</button>
         <button id="decrementTickDelay" onclick="updateTickDelay(-10)">Speed +</button>
-        <select id="surface-mode-select">
-          <option value="Finite">Finite</option>
-          <option value="Torus">Torus</option>
-        </select>
         <select id="load-figure">
           <option value="24P10">24P10</option>
           <option value="33p3.1">33p3.1</option>

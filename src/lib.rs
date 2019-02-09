@@ -472,7 +472,6 @@ pub struct World {
     height: i32,
     cells: Vec<Cell>,
     cache: Vec<Cell>,
-    mode: SurfaceMode,
     generations: u32,
     changed_cells: Vec<i32>,
 }
@@ -558,10 +557,6 @@ impl World {
         })
     }
 
-    pub fn set_mode(&mut self, mode: SurfaceMode) {
-        self.mode = mode;
-    }
-
     #[inline(always)]
     fn get_index(&self, mut row: i32, mut col: i32) -> i32 {
         if row < 0 {
@@ -618,16 +613,6 @@ impl World {
     }
 
     fn alive_neighbors(&self, row: i32, col: i32) -> u8 {
-        let check_out_of_bounds = |r, c| match self.mode {
-            SurfaceMode::Torus => self.get(row + r, col + c) as u8,
-            SurfaceMode::Finite => {
-                if row + r >= 0 && row + r < self.height && col + c >= 0 && col + c < self.width {
-                    self.get(row + r, col + c) as u8
-                } else {
-                    0
-                }
-            }
-        };
         let indexes = [
             (-1, -1),
             (-1, 0),
@@ -640,7 +625,7 @@ impl World {
         ];
         indexes
             .into_iter()
-            .map(|(r, c)| check_out_of_bounds(r, c))
+            .map(|(r, c)| self.get(row + r, col + c) as u8)
             .sum()
     }
 
@@ -689,7 +674,6 @@ impl World {
             height,
             cells: data.clone(),
             cache: data,
-            mode: SurfaceMode::Finite,
             generations: 0,
             changed_cells: Vec::new(),
         }
