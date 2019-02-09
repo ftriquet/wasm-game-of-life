@@ -1,6 +1,4 @@
-#![feature(custom_attribute)]
-#![allow(dead_code)]
-#![allow(unused_attributes)]
+// #![feature(custom_attribute)]
 
 use console_error_panic_hook;
 
@@ -40,7 +38,7 @@ mod parsing {
         Comment(String),
         Name(String),
         Author(String),
-        Coordinates(i64, i64),
+        Coordinates(i32, i32),
         Other(String),
     }
     // }}}
@@ -125,13 +123,13 @@ mod parsing {
     named!(digit<CompleteStr, char>, one_of!("0123456789"));
 
     named!(
-        signed_num<CompleteStr, i64>,
+        signed_num<CompleteStr, i32>,
         do_parse!(
             sign: alt!(map!(tag!("-"), Some) | opt!(tag!("+"))) >>
             n: num >>
             (match sign {
-                Some(CompleteStr("-")) => -(n as i64),
-                _ => (n as i64)
+                Some(CompleteStr("-")) => -(n as i32),
+                _ => n as i32
             })
         )
     );
@@ -478,15 +476,6 @@ pub enum Cell {
     Alive = 1,
 }
 
-impl ::std::convert::From<char> for Cell {
-    fn from(c: char) -> Self {
-        match c {
-            '.' => Cell::Dead,
-            'o' | 'O' => Cell::Alive,
-            _ => panic!("Invalid character: {}", c),
-        }
-    }
-}
 
 fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
     match o {
@@ -497,16 +486,14 @@ fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
 
 #[wasm_bindgen]
 impl World {
-    pub fn load_string(&mut self, pattern: String) -> String {
+    pub fn load_string(&mut self, pattern: String) {
         let res = parsing::parse_rle(pattern.as_str().into());
         match res {
             Ok((_, pat)) => {
                 self.load_rle(pat);
-                "Success".to_string()
             }
             Err(_) => {
                 log("Failed to parse rle string");
-                "Failed to parse".to_string()
             }
         }
     }
@@ -520,24 +507,24 @@ impl World {
         }).find(Option::is_some);
         let (x, y) = flatten(coords).unwrap_or((0, 0));
 
-        let origin_x = self.width as i64/ 2;
-        let origin_y = self.height as i64/ 2;
+        let origin_x = self.width / 2;
+        let origin_y = self.height / 2;
 
-        let top_left_x = (origin_x + x) as i32;
-        let top_left_y = (origin_y + y) as i32;
+        let top_left_x = origin_x + x;
+        let top_left_y = origin_y + y;
 
         let mut i = top_left_x;
         let mut j = top_left_y;
         rle.content.iter().for_each(|seq| {
             match seq {
-                parsing::RleTagSequence(n, parsing::RleTag::NextLine) => {
-                    (0..*n).for_each(|_| {
+                parsing::RleTagSequence(count, parsing::RleTag::NextLine) => {
+                    (0..*count).for_each(|_| {
                         j += 1;
                     });
                     i = top_left_x;
                 },
-                parsing::RleTagSequence(n, state) => {
-                    (0..*n).for_each(|_| {
+                parsing::RleTagSequence(count, state) => {
+                    (0..*count).for_each(|_| {
                         let cell = match state {
                             parsing::RleTag::Dead => Cell::Dead,
                             parsing::RleTag::Alive => Cell::Alive,
@@ -554,10 +541,10 @@ impl World {
     #[inline(always)]
     fn get_index(&self, mut row: i32, mut col: i32) -> i32 {
         if row < 0 {
-            row = self.height + row
+            row += self.height;
         };
         if col < 0 {
-            col = self.width + col
+            col += self.width;
         };
         let col = col % self.width;
         let row = row % self.height;
@@ -618,7 +605,7 @@ impl World {
             (1, 1),
         ];
         indexes
-            .into_iter()
+            .iter()
             .map(|(r, c)| self.get(row + r, col + c) as u8)
             .sum()
     }
