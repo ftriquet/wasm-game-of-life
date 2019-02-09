@@ -456,6 +456,8 @@ mod parsing {
 extern "C" {
     #[wasm_bindgen(js_namespace=console)]
     fn log(s: &str);
+    #[wasm_bindgen(js_namespace=Math)]
+    fn random() -> f64;
 }
 
 #[wasm_bindgen]
@@ -622,6 +624,11 @@ impl World {
         self.changed_cells.clear();
     }
 
+    pub fn next_tick(mut self) -> World {
+        self.tick();
+        self
+    }
+
     pub fn tick(&mut self) {
         for row in 0..self.height {
             for col in 0..self.width {
@@ -648,7 +655,15 @@ impl World {
     pub fn new(width: i32, height: i32) -> World {
         console_error_panic_hook::set_once();
 
-        let data = vec![Cell::Dead; (width * height) as usize];
+        let data = (0..(width*height)).map(|_| {
+            let f: f64 = random();
+            if f < 0.3 {
+                Cell::Alive
+            } else {
+                Cell::Dead
+            }
+        }).collect::<Vec<_>>();
+        //let data = vec![Cell::Dead; (width * height) as usize];
 
         World {
             width,

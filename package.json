@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel index.html",
-    "build": "parcel build js/app.js"
+    "build": "NODE_ENV=production parcel build js/index.js --no-source-maps",
+    "parcel-help": "parcel build --help"
   },
   "repository": {
     "type": "git",
