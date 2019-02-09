@@ -3,7 +3,7 @@ const React = require('react');
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#f44298";
 
-const cellSize = 10;
+const cellSize = 5;
 const getCells = (wasm, world) => {
   const cellsPtr = world.cells();
   const cells = new Uint32Array(wasm.memory.buffer, cellsPtr, world.width * world.height);
@@ -26,6 +26,30 @@ const fromIndex = (world, idx) => {
   const row = Math.floor(idx / world.width);
   return [row, col];
 };
+
+const drawChangedCells = (ctx, wasm, world) => {
+  const cells = getCells(wasm, world);
+  const cellsIndexes = getChangedCells(wasm, world);
+
+  ctx.beginPath();
+
+  for (let i = 0; i < cellsIndexes.length; i++) {
+    const index = cellsIndexes[i];
+    const [row, col] = fromIndex(world, index);
+    const cell = cells[index];
+
+    ctx.fillStyle = cell === 0 ? DEAD_COLOR : ALIVE_COLOR; 
+    ctx.fillRect(
+      col * (cellSize) + 1,
+      row * (cellSize) + 1,
+      cellSize,
+      cellSize
+    );
+  }
+
+  world.reset_changed_cells();
+  ctx.stroke();
+}
 
 const drawCells = (ctx, wasm, world) => {
   const cells = getCells(wasm, world);
@@ -66,7 +90,7 @@ class Playground extends React.Component {
   drawCanvas() {
     const { world, wasm } = this.props;
     const ctx = this.canvasRef.current.getContext('2d');
-    drawCells(ctx, wasm, world);
+    drawChangedCells(ctx, wasm, world);
   }
 
   render() {
