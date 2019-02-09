@@ -4,10 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel index.html",
-    "build": "NODE_ENV=production parcel build js/index.js --no-source-maps",
-    "parcel-help": "parcel build --help"
+    "build": "NODE_ENV=development parcel build js/index.js --no-source-maps",
+    "lint": "prettier --write js/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -23,7 +21,9 @@
     "express": "^4.16.4",
     "parcel": "^1.11.0",
     "parcel-bundler": "^1.11.0",
+    "prettier": "^1.16.4",
     "react": "^16.8.1",
-    "react-dom": "^16.8.1"
+    "react-dom": "^16.8.1",
+    "react-sidebar": "^3.0.2"
   }
 }

@@ -1,11 +1,11 @@
-const React = require('react');
+const React = require("react");
 
 class Panel extends React.Component {
   playPauseStr() {
     if (this.props.playing) {
-      return 'Pause';
+      return "Pause";
     } else {
-      return 'Play';
+      return "Play";
     }
   }
 
@@ -13,9 +13,12 @@ class Panel extends React.Component {
     return (
       <div id="panel">
         <button onClick={this.props.playPause}>{this.playPauseStr()}</button>
-        <div style={{'text-align': 'center'}}>{this.props.tickDelay}</div>
+        <button>Step</button>
+        <button onClick={this.props.faster}>Speed +</button>
+        <button onClick={this.props.slower}>Speed -</button>
+        <div style={{ "text-align": "center" }}>{this.props.tickDelay}</div>
       </div>
-    )
+    );
   }
 }
 

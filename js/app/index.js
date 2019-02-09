@@ -1,7 +1,7 @@
-const React = require('react');
-const Playground = require('../playground');
-const Panel = require('../panel');
-
+const React = require("react");
+const Playground = require("../playground");
+const Panel = require("../panel");
+const MIN_DELAY = 20;
 
 class App extends React.Component {
   constructor(props) {
@@ -15,38 +15,69 @@ class App extends React.Component {
       playing: true,
       animationId: null,
       tickDelay: 20,
+      timerId: null
     };
   }
 
   componentDidMount() {
-    this.timerId = setInterval(() => {
-      this.tick();
-    }, this.props.tickDelay);
+    this.setState(state => ({
+      timerId: setTimeout(() => this.tick(), state.tickDelay)
+    }));
   }
 
   componentWillUnmount() {
     clearInterval(this.timerId);
   }
 
-  playPause(e) {
-    this.setState(state => ({ playing: !state.playing }));
+  playPause() {
+    this.setState(state => {
+      if (state.timerId) {
+        clearTimeout(state.timerId);
+        return { timerId: null };
+      } else {
+        return { timerId: setTimeout(() => this.tick(), state.tickDelay) };
+      }
+    });
+  }
+
+  updateTickDelay(amount) {
+    this.setState(state => {
+      let newDelay = state.tickDelay + amount;
+      if (newDelay < MIN_DELAY) {
+        newDelay = MIN_DELAY;
+      }
+      return { tickDelay: newDelay };
+    });
+  }
+
+  faster() {
+    this.updateTickDelay(-10);
+  }
+
+  slower() {
+    this.updateTickDelay(10);
   }
 
   tick() {
-    if (this.state.playing) {
-      this.state.world.tick();
-      // This sounds like a hack but it's needed for the children components to render
-      this.setState({});
-    }
+    this.state.world.tick();
+    this.setState(state => ({
+      timerId: setTimeout(() => this.tick(), state.tickDelay)
+    }));
   }
 
   render() {
     return (
       <div id="app">
-        <Panel tickDelay={this.state.tickDelay} playing={this.state.playing} playPause={this.playPause.bind(this)}/>
-        <Playground world={this.state.world} wasm={this.props.wasm}/>
+        <Panel
+          tickDelay={this.state.tickDelay}
+          playing={this.state.timerId !== null}
+          playPause={this.playPause.bind(this)}
+          faster={this.faster.bind(this)}
+          slower={this.slower.bind(this)}
+        />
+        <Playground world={this.state.world} wasm={this.props.wasm} />
       </div>
-    )
+    );
   }
 }
 

@@ -1,4 +1,4 @@
-const React = require('react');
+const React = require("react");
 
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#f44298";
@@ -6,14 +6,22 @@ const ALIVE_COLOR = "#f44298";
 const cellSize = 5;
 const getCells = (wasm, world) => {
   const cellsPtr = world.cells();
-  const cells = new Uint32Array(wasm.memory.buffer, cellsPtr, world.width * world.height);
+  const cells = new Uint32Array(
+    wasm.memory.buffer,
+    cellsPtr,
+    world.width * world.height
+  );
   return cells;
 };
 
 const getChangedCells = (wasm, world) => {
   const changedCellsPtr = world.changed_cells();
   const changedCellsLen = world.changed_cells_len();
-  const cells = new Uint32Array(wasm.memory.buffer, changedCellsPtr, changedCellsLen);
+  const cells = new Uint32Array(
+    wasm.memory.buffer,
+    changedCellsPtr,
+    changedCellsLen
+  );
   return cells;
 };
 
@@ -38,18 +46,13 @@ const drawChangedCells = (ctx, wasm, world) => {
     const [row, col] = fromIndex(world, index);
     const cell = cells[index];
 
-    ctx.fillStyle = cell === 0 ? DEAD_COLOR : ALIVE_COLOR; 
-    ctx.fillRect(
-      col * (cellSize) + 1,
-      row * (cellSize) + 1,
-      cellSize,
-      cellSize
-    );
+    ctx.fillStyle = cell === 0 ? DEAD_COLOR : ALIVE_COLOR;
+    ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize, cellSize);
   }
 
   world.reset_changed_cells();
   ctx.stroke();
-}
+};
 
 const drawCells = (ctx, wasm, world) => {
   const cells = getCells(wasm, world);
@@ -62,17 +65,12 @@ const drawCells = (ctx, wasm, world) => {
 
       ctx.fillStyle = cell === 0 ? DEAD_COLOR : ALIVE_COLOR;
 
-      ctx.fillRect(
-        col * (cellSize) + 1,
-        row * (cellSize) + 1,
-        cellSize,
-        cellSize
-      );
+      ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize, cellSize);
     }
   }
 
   ctx.stroke();
-}
+};
 
 class Playground extends React.Component {
   constructor(props) {
@@ -89,7 +87,7 @@ class Playground extends React.Component {
 
   drawCanvas() {
     const { world, wasm } = this.props;
-    const ctx = this.canvasRef.current.getContext('2d');
+    const ctx = this.canvasRef.current.getContext("2d");
     drawChangedCells(ctx, wasm, world);
   }
 
@@ -98,9 +96,14 @@ class Playground extends React.Component {
 
     return (
       <div class="playground">
-        <canvas id={'game-of-life-canvas'}ref={this.canvasRef} width={this.props.world.width * cellSize} height={this.props.world.height * cellSize} />
+        <canvas
+          id={"game-of-life-canvas"}
+          ref={this.canvasRef}
+          width={this.props.world.width * cellSize}
+          height={this.props.world.height * cellSize}
+        />
       </div>
-    )
+    );
   }
 }
 
