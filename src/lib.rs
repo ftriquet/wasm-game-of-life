@@ -461,12 +461,6 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub enum SurfaceMode {
-    Finite,
-    Torus,
-}
-
-#[wasm_bindgen]
 pub struct World {
     width: i32,
     height: i32,
