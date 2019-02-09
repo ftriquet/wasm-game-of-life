@@ -21,7 +21,7 @@ let World;
 let render;
 let step;
 let currentWorld;
-let play = true;
+let animationId = null;
 
 const createWorld = (width, height, cellSize) => {
   const nCellsWidth = Math.floor(width / cellSize);
@@ -46,12 +46,13 @@ const createWorld = (width, height, cellSize) => {
 const playPause = () => {
   const playPauseButton = document.getElementById("play-pause-button");
 
-  if (play) {
+  if (animationId) {
     playPauseButton.innerHTML = "Play";
-    play = false;
+    cancelAnimationFrame(animationId);
+    animationId = null;
   } else {
     playPauseButton.innerHTML = "Pause";
-    play = true;
+    render();
   }
 }
 
@@ -175,6 +176,7 @@ const startGame = () => {
       if (!currentWorld) { return; };
       let { world } = currentWorld;
       world.tick();
+      draw();
     };
 
     draw = (redrawAll) => {
@@ -208,7 +210,7 @@ const startGame = () => {
 
     const tick = () => {
       setTimeout(() => {
-        if (play) {
+        if (animationId) {
           if (!currentWorld) { return; };
           let { world } = currentWorld;
           world.tick();
