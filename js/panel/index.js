@@ -1,22 +1,27 @@
-const React = require("react");
+import React from "react";
+import Button from '@material-ui/core/Button';
+import Toolbar from '@material-ui/core/Toolbar';
+import Faster from '@material-ui/icons/FastForward';
+import Slower from '@material-ui/icons/FastRewind';
+
 
 class Panel extends React.Component {
-  playPauseStr() {
+  playPause() {
     if (this.props.playing) {
-      return "Pause";
+      return 'Pause';
     } else {
-      return "Play";
+      return 'Play';
     }
   }
 
   render() {
+    // <div style={{ textAlign: "center" }}>{this.props.tickDelay}</div>
     return (
-      <div id="panel">
-        <button onClick={this.props.playPause}>{this.playPauseStr()}</button>
-        <button>Step</button>
-        <button onClick={this.props.faster}>Speed +</button>
-        <button onClick={this.props.slower}>Speed -</button>
-        <div style={{ "text-align": "center" }}>{this.props.tickDelay}</div>
+      <div className="panel">
+          <Button size="small" onClick={this.props.playPause}>{this.playPause()}</Button>
+          <Button size="small" onClick={this.props.step}>Step</Button>
+          <Button size="small" onClick={this.props.faster}>Speed +</Button>
+          <Button size="small" onClick={this.props.slower}>Speed -</Button>
       </div>
     );
   }

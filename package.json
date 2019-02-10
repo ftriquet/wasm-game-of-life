@@ -18,12 +18,15 @@
   },
   "homepage": "https://github.com/ftriquet/wasm-game-of-life#readme",
   "dependencies": {
-    "express": "^4.16.4",
+    "@material-ui/core": "^3.9.2",
+    "@material-ui/icons": "^3.0.2",
     "parcel": "^1.11.0",
     "parcel-bundler": "^1.11.0",
+    "react": ">=16.3.0",
+    "react-dom": ">=16.3.0"
+  },
+  "dev-dependencies": {
     "prettier": "^1.16.4",
-    "react": "^16.8.1",
-    "react-dom": "^16.8.1",
-    "react-sidebar": "^3.0.2"
+    "express": "^4.16.4"
   }
 }

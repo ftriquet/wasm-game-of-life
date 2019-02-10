@@ -7,25 +7,14 @@
     <title>Game of Life</title>
     <style type="text/css" media="screen">
 html, body {
+  font-family: 'Roboto';
     margin: 0;
     height: 100%;
 }
-#main-container, #app {
-  display: flex;
-}
-#panel {
-  flex: 0 0 100px;
-  display:flex;
-  flex-direction: column;
-  background-color: #eeeeee;
-}
-#panel > * {
-  margin: 5px;
-}
-#game-of-life-canvas {
-  padding: 5px;
-}
     </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   </head>
 
   <body>
@@ -34,31 +23,4 @@ html, body {
     <script charset="utf-8" src="build/game_of_life.js"></script>
     <script charset="utf-8" src="dist/index.js"></script>
   </body>
-  <!--
-  <body onload="startGame()">
-    <div id="main-container">
-      <div id="panel">
-        <button id="play-pause-button" onclick="playPause()">Pause</button>
-        <button id="step-button" onclick="step()">Step</button>
-        <button id="clear" onclick="clearWorld()">Clear</button>
-        <button id="incrementTickDelay" onclick="updateTickDelay(10)">Speed -</button>
-        <button id="decrementTickDelay" onclick="updateTickDelay(-10)">Speed +</button>
-        <select id="load-figure">
-          <option value="24P10">24P10</option>
-          <option value="33p3.1">33p3.1</option>
-          <option value="3enginecordership">3 Engine Cordership</option>
-          <option value="68P16">68P16</option>
-          <option value="bananaspark">Banana Spark</option>
-          <option value="smiley">Smiley</option>
-        </select>
-        <div id="generations" style="text-align: center;"></div>
-        <div id="speed" style="text-align: center;"></div>
-        <div id="dimensions" style="text-align: center;"></div>
-      </div>
-      <canvas id="game-of-life-canvas"></canvas>
-      <script charset="utf-8" src="build/game_of_life.js"></script>
-      <script charset="utf-8" src="index.js"></script>
-    </div>
-  </body>
-    -->
 </html>

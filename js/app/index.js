@@ -6,16 +6,18 @@ const MIN_DELAY = 20;
 class App extends React.Component {
   constructor(props) {
     super(props);
-    let world = World.new(240, 180);
-    world.width = 240;
-    world.height = 180;
+    width = Math.floor(document.body.clientWidth / 5);
+    height = Math.floor((document.body.clientHeight - 30)/ 5);
+    let world = World.new(width, height);
+    world.width = width;
+    world.height = height;
 
     this.state = {
       world: world,
       playing: true,
       animationId: null,
       tickDelay: 20,
-      timerId: null
+      timerId: null,
     };
   }
 
@@ -65,6 +67,11 @@ class App extends React.Component {
     }));
   }
 
+  step() {
+    this.state.world.tick();
+    this.setState({});
+  }
+
   render() {
     return (
       <div id="app">
@@ -74,6 +81,8 @@ class App extends React.Component {
           playPause={this.playPause.bind(this)}
           faster={this.faster.bind(this)}
           slower={this.slower.bind(this)}
+          isOpen={this.state.menuIsOpen}
+          step={this.step.bind(this)}
         />
         <Playground world={this.state.world} wasm={this.props.wasm} />
       </div>

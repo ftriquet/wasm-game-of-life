@@ -47,7 +47,7 @@ const drawChangedCells = (ctx, wasm, world) => {
     const cell = cells[index];
 
     ctx.fillStyle = cell === 0 ? DEAD_COLOR : ALIVE_COLOR;
-    ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize, cellSize);
+    ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 1, cellSize - 1);
   }
 
   world.reset_changed_cells();
@@ -95,7 +95,7 @@ class Playground extends React.Component {
     const { world } = this.props;
 
     return (
-      <div class="playground">
+      <div className="playground">
         <canvas
           id={"game-of-life-canvas"}
           ref={this.canvasRef}
