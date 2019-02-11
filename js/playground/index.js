@@ -2,7 +2,7 @@ const React = require("react");
 
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#f44298";
-const cellSize = 2;
+const cellSize = 5;
 
 const getCells = (wasm, world) => {
   const cellsPtr = world.cells();

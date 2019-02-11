@@ -2,7 +2,7 @@ import React from "react";
 import Playground from "../playground";
 import Panel from "../panel";
 const MIN_DELAY = 2;
-const cellSize = 2;
+const cellSize = 5;
 
 class App extends React.Component {
   constructor(props) {
