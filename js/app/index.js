@@ -1,13 +1,15 @@
-const React = require("react");
-const Playground = require("../playground");
-const Panel = require("../panel");
-const MIN_DELAY = 20;
+import React from "react";
+import Playground from "../playground";
+import Panel from "../panel";
+const MIN_DELAY = 2;
+const cellSize = 2;
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    const width = Math.floor(document.body.clientWidth / 10);
-    const height = Math.floor((document.body.clientHeight - 30) / 10);
+    // -10 for margin
+    const width = Math.floor((window.innerWidth - 10) / cellSize);
+    const height = Math.floor((window.innerHeight - 48 - 10) / cellSize);
     const world = World.new(width, height);
     world.width = width;
     world.height = height;
@@ -77,6 +79,12 @@ class App extends React.Component {
     this.setState({});
   }
 
+  loadRle(content) {
+    console.log(`Load rle: ${content}`);
+    this.state.world.load_string(content);
+    this.setState({});
+  }
+
   render() {
     return (
       <div id="app">
@@ -88,6 +96,7 @@ class App extends React.Component {
           slower={this.slower.bind(this)}
           isOpen={this.state.menuIsOpen}
           step={this.step.bind(this)}
+          loadRle={this.loadRle.bind(this)}
         />
         <Playground
           world={this.state.world}

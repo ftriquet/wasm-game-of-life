@@ -5,7 +5,20 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Faster from "@material-ui/icons/FastForward";
 import Slower from "@material-ui/icons/FastRewind";
 
+import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import ExpandMore from "@material-ui/icons/ExpandMore";
+
+import LoadModal from "../loadModal";
+
 class Panel extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      modalIsOpen: false
+    };
+  }
+
   playPause() {
     if (this.props.playing) {
       return "Pause";
@@ -14,10 +27,24 @@ class Panel extends React.Component {
     }
   }
 
+  openLoadModal() {
+    this.setState({ modalIsOpen: true });
+  }
+
+  onModalSubmit(content) {
+    this.props.loadRle(content);
+    this.setState({ modalIsOpen: false });
+  }
+
+  onModalClose() {
+    this.setState({ modalIsOpen: false });
+  }
+
+  // give array of objects to loadMenu //dropdown
   render() {
     return (
       <div className="panel">
-        <AppBar color="secondary">
+        <AppBar color="primary" position="static">
           <Toolbar variant="dense">
             <Button color="inherit" size="small" onClick={this.props.playPause}>
               {this.playPause()}
@@ -31,6 +58,19 @@ class Panel extends React.Component {
             <Button color="inherit" size="small" onClick={this.props.slower}>
               Speed -
             </Button>
+            <Button
+              color="inherit"
+              size="small"
+              onClick={this.openLoadModal.bind(this)}
+            >
+              Load
+            </Button>
+            {this.state.modalIsOpen && (
+              <LoadModal
+                onSubmit={this.onModalSubmit.bind(this)}
+                onClose={this.onModalClose.bind(this)}
+              />
+            )}
           </Toolbar>
         </AppBar>
       </div>

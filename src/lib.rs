@@ -655,14 +655,14 @@ impl World {
     pub fn new(width: i32, height: i32) -> World {
         console_error_panic_hook::set_once();
 
-//        let data = (0..(width*height)).map(|_| {
-//            let f: f64 = random();
-//            if f < 0.3 {
-//                Cell::Alive
-//            } else {
-//                Cell::Dead
-//            }
-//        }).collect::<Vec<_>>();
+        // let data = (0..(width*height)).map(|_| {
+        //     let f: f64 = random();
+        //     if f < 0.3 {
+        //         Cell::Alive
+        //     } else {
+        //         Cell::Dead
+        //     }
+        // }).collect::<Vec<_>>();
         let data = vec![Cell::Dead; (width * height) as usize];
 
         World {
