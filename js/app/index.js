@@ -6,9 +6,9 @@ const MIN_DELAY = 20;
 class App extends React.Component {
   constructor(props) {
     super(props);
-    width = Math.floor(document.body.clientWidth / 5);
-    height = Math.floor((document.body.clientHeight - 30)/ 5);
-    let world = World.new(width, height);
+    const width = Math.floor(document.body.clientWidth / 10);
+    const height = Math.floor((document.body.clientHeight - 30) / 10);
+    const world = World.new(width, height);
     world.width = width;
     world.height = height;
 
@@ -17,7 +17,7 @@ class App extends React.Component {
       playing: true,
       animationId: null,
       tickDelay: 20,
-      timerId: null,
+      timerId: null
     };
   }
 
@@ -72,6 +72,11 @@ class App extends React.Component {
     this.setState({});
   }
 
+  toggleCell(row, col) {
+    this.state.world.toggle(row, col);
+    this.setState({});
+  }
+
   render() {
     return (
       <div id="app">
@@ -84,7 +89,11 @@ class App extends React.Component {
           isOpen={this.state.menuIsOpen}
           step={this.step.bind(this)}
         />
-        <Playground world={this.state.world} wasm={this.props.wasm} />
+        <Playground
+          world={this.state.world}
+          wasm={this.props.wasm}
+          toggleCell={this.toggleCell.bind(this)}
+        />
       </div>
     );
   }

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "NODE_ENV=development parcel build js/index.js --no-source-maps",
+    "build": "NODE_ENV=development parcel build js/index.js --no-source-maps --no-minify",
     "lint": "prettier --write js/**/*.js"
   },
   "repository": {
@@ -25,7 +25,7 @@
     "react": ">=16.3.0",
     "react-dom": ">=16.3.0"
   },
-  "dev-dependencies": {
+  "devDependencies": {
     "prettier": "^1.16.4",
     "express": "^4.16.4"
   }
