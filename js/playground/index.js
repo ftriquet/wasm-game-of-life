@@ -50,8 +50,8 @@ const drawChangedCells = (ctx, wasm, world) => {
     ctx.fillRect(
       col * cellSize + 1,
       row * cellSize + 1,
-      cellSize,
-      cellSize
+      cellSize - 1,
+      cellSize - 1
     );
   }
 
