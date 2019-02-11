@@ -70,19 +70,31 @@ class App extends React.Component {
   }
 
   step() {
-    this.state.world.tick();
-    this.setState({});
+    this.setState(state => {
+      state.world.tick();
+      return {};
+    });
   }
 
   toggleCell(row, col) {
-    this.state.world.toggle(row, col);
-    this.setState({});
+    this.setState(state => {
+      state.world.toggle(row, col);
+      return {};
+    });
   }
 
   loadRle(content) {
-    console.log(`Load rle: ${content}`);
-    this.state.world.load_string(content);
-    this.setState({});
+    this.setState(state => {
+      state.world.load_string(content);
+      return {};
+    });
+  }
+
+  clearWorld() {
+    this.setState(state => {
+      state.world.clear();
+      return {};
+    });
   }
 
   render() {
@@ -97,6 +109,7 @@ class App extends React.Component {
           isOpen={this.state.menuIsOpen}
           step={this.step.bind(this)}
           loadRle={this.loadRle.bind(this)}
+          clear={this.clearWorld.bind(this)}
         />
         <Playground
           world={this.state.world}

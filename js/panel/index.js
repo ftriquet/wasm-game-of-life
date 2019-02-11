@@ -49,6 +49,9 @@ class Panel extends React.Component {
             <Button color="inherit" size="small" onClick={this.props.playPause}>
               {this.playPause()}
             </Button>
+            <Button color="inherit" size="small" onClick={this.props.clear}>
+              Clear
+            </Button>
             <Button color="inherit" size="small" onClick={this.props.step}>
               Step
             </Button>
