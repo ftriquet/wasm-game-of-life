@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "NODE_ENV=development parcel build js/index.js --no-source-maps --no-minify",
+    "build:production": "NODE_ENV=production parcel build js/index.js --no-source-maps",
     "lint": "prettier --write js/**/*.js"
   },
   "repository": {

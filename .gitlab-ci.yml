@@ -5,4 +5,5 @@ deploy:
     - rustup toolchain install nightly
     - rustup override set nightly
     - bash build.sh
+    - yarn build:production
     - cp -r * /home/admin/www/life
