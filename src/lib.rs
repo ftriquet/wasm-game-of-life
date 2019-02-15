@@ -4,6 +4,8 @@ use console_error_panic_hook;
 
 use wasm_bindgen::prelude::*;
 
+use std::collections::HashSet;
+
 // {{{ parsing
 mod parsing {
     use nom::{
@@ -452,6 +454,28 @@ mod parsing {
 }
 //  }}}
 
+use std::hash::{Hasher, BuildHasher};
+
+pub struct CustomHasher(u64);
+impl Hasher for CustomHasher {
+    fn write(&mut self, bytes: &[u8]) {
+        self.0 = unsafe { *(bytes.as_ptr() as *const u64) }
+    }
+
+    fn finish(&self) -> u64 {
+        self.0
+    }
+}
+
+pub struct CustomHasherBuilder;
+
+impl BuildHasher for CustomHasherBuilder {
+    type Hasher = CustomHasher;
+    fn build_hasher(&self) -> Self::Hasher {
+        CustomHasher(0)
+    }
+}
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace=console)]
@@ -498,6 +522,19 @@ impl World {
                 log("Failed to parse rle string");
             }
         }
+    }
+
+    pub fn resize(&mut self, width: i32, height: i32) {
+        let mut new_world = World::new(width, height);
+        let copy_end_width = ::std::cmp::min(width, self.width);
+        let copy_end_height = ::std::cmp::min(height, self.height);
+        for row in 0..copy_end_height {
+            for col in 0..copy_end_width {
+                new_world.set_cell(row, col, self.get(row, col));
+            }
+        }
+
+        ::std::mem::swap(self, &mut new_world);
     }
 
     fn load_rle(&mut self, rle: parsing::Rle) {
@@ -623,6 +660,58 @@ impl World {
 
     pub fn reset_changed_cells(&mut self) {
         self.changed_cells.clear();
+    }
+
+    pub fn next_tick(&mut self) {
+        let mut cells_to_check = HashSet::with_capacity_and_hasher((self.width * self.height) as usize, CustomHasherBuilder);
+        self.changed_cells.iter().for_each(|idx| {
+            cells_to_check.insert(*idx);
+            cells_to_check.insert(*idx - 1);
+            cells_to_check.insert(*idx + 1);
+
+            cells_to_check.insert(*idx - self.width - 1);
+            cells_to_check.insert(*idx - self.width);
+            cells_to_check.insert(*idx - self.width + 1);
+
+            cells_to_check.insert(*idx + self.width - 1);
+            cells_to_check.insert(*idx + self.width);
+            cells_to_check.insert(*idx + self.width + 1);
+        });
+
+        if cells_to_check.is_empty() {
+            (0..(self.width*self.height)).for_each(|i| {
+                cells_to_check.insert(i);
+            });
+        }
+
+        let mut new_changed_cells = Vec::new();
+        cells_to_check.iter().for_each(|idx| {
+            let (row, col) = self.from_index(*idx);
+            let cell = self.get(row, col);
+            let neighbors = self.alive_neighbors(row, col);
+            let next_cell = match (cell, neighbors) {
+                (Cell::Alive, 2) | (_, 3) => Cell::Alive,
+                _ => Cell::Dead,
+            };
+            if cell != next_cell {
+                new_changed_cells.push(*idx);
+            }
+            self.set(row, col, next_cell);
+        });
+
+        self.generations += 1;
+
+        ::std::mem::swap(&mut self.cells, &mut self.cache);
+        ::std::mem::swap(&mut self.changed_cells, &mut new_changed_cells);
+    }
+
+    fn from_index(&self, mut idx: i32) -> (i32, i32) {
+        if idx < 0 {
+            idx += self.width * self.height;
+        }
+        let row = idx / self.width;
+        let col = idx % self.width;
+        (row, col)
     }
 
     pub fn tick(&mut self) {

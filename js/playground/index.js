@@ -2,7 +2,6 @@ const React = require("react");
 
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#f44298";
-const cellSize = 5;
 
 const getCells = (wasm, world) => {
   const cellsPtr = world.cells();
@@ -35,7 +34,7 @@ const fromIndex = (world, idx) => {
   return [row, col];
 };
 
-const drawChangedCells = (ctx, wasm, world) => {
+const drawChangedCells = (ctx, wasm, world, cellSize) => {
   const cells = getCells(wasm, world);
   const cellsIndexes = getChangedCells(wasm, world);
 
@@ -93,7 +92,17 @@ class Playground extends React.Component {
   drawCanvas() {
     const { world, wasm } = this.props;
     const ctx = this.canvasRef.current.getContext("2d");
-    drawChangedCells(ctx, wasm, world);
+    this.canvasRef.current.style = `
+image-rendering: optimizeSpeed;
+image-rendering: -moz-crisp-edges;
+image-rendering: -webkit-optimize-contrast;
+image-rendering: -o-crisp-edges;
+image-rendering: optimize-contrast;
+image-rendering: crisp-edges;
+image-rendering: pixelated;
+-ms-interpolation-mode: nearest-neighbor;
+`;
+    drawChangedCells(ctx, wasm, world, this.props.cellSize);
   }
 
   handleClick(event) {
@@ -106,8 +115,8 @@ class Playground extends React.Component {
     const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
     const canvasTop = (event.clientY - boundingRect.top) * scaleY;
 
-    const row = Math.floor(canvasTop / cellSize);
-    const col = Math.floor(canvasLeft / cellSize);
+    const row = Math.floor(canvasTop / this.props.cellSize);
+    const col = Math.floor(canvasLeft / this.props.cellSize);
     this.props.toggleCell(row, col);
   }
 
@@ -120,8 +129,8 @@ class Playground extends React.Component {
           id={"game-of-life-canvas"}
           onClick={this.handleClick.bind(this)}
           ref={this.canvasRef}
-          width={this.props.world.width * cellSize}
-          height={this.props.world.height * cellSize}
+          width={this.props.world.width * this.props.cellSize}
+          height={this.props.world.height * this.props.cellSize}
         />
       </div>
     );

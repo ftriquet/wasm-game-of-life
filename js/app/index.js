@@ -2,35 +2,45 @@ import React from "react";
 import Playground from "../playground";
 import Panel from "../panel";
 const MIN_DELAY = 2;
-const cellSize = 5;
+const DEFAULT_CELL_SIZE = 5;
+const MIN_CELL_SIZE = 2;
+const MAX_CELL_SIZE = 15;
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    // -10 for margin
-    const width = Math.floor((window.innerWidth - 10) / cellSize);
-    const height = Math.floor((window.innerHeight - 48 - 10) / cellSize);
-    const world = World.new(width, height);
-    world.width = width;
-    world.height = height;
-
     this.state = {
-      world: world,
-      playing: true,
+      world: this.createWorld(DEFAULT_CELL_SIZE),
       animationId: null,
       tickDelay: 20,
-      timerId: null
+      timerId: null,
+      cellSize: DEFAULT_CELL_SIZE,
     };
   }
 
-  componentDidMount() {
-    this.setState(state => ({
-      timerId: setTimeout(() => this.tick(), state.tickDelay)
-    }));
+  resizeWorld() {
+    this.setState(state => {
+      const { world, cellSize } = state;
+      const width = Math.floor((window.innerWidth) / cellSize);
+      const height = Math.floor((window.innerHeight - 48) / cellSize);
+      world.resize(width, height);
+      world.width = width;
+      world.height = height;
+      return { world };
+    })
+  }
+
+  createWorld(cellSize) {
+    const width = Math.floor((window.innerWidth) / cellSize);
+    const height = Math.floor((window.innerHeight - 48) / cellSize);
+    const world = World.new(width, height);
+    world.width = width;
+    world.height = height;
+    return world;
   }
 
   componentWillUnmount() {
-    clearInterval(this.timerId);
+    clearInterval(this.state.timerId);
   }
 
   playPause() {
@@ -44,26 +54,12 @@ class App extends React.Component {
     });
   }
 
-  updateTickDelay(amount) {
-    this.setState(state => {
-      let newDelay = state.tickDelay + amount;
-      if (newDelay < MIN_DELAY) {
-        newDelay = MIN_DELAY;
-      }
-      return { tickDelay: newDelay };
-    });
-  }
-
-  faster() {
-    this.updateTickDelay(-10);
-  }
-
-  slower() {
-    this.updateTickDelay(10);
+  updateSpeed(value) {
+    this.setState({ tickDelay: 2000 / value })
   }
 
   tick() {
-    this.state.world.tick();
+    this.state.world.next_tick();
     this.setState(state => ({
       timerId: setTimeout(() => this.tick(), state.tickDelay)
     }));
@@ -71,7 +67,7 @@ class App extends React.Component {
 
   step() {
     this.setState(state => {
-      state.world.tick();
+      state.world.next_tick();
       return {};
     });
   }
@@ -97,6 +93,11 @@ class App extends React.Component {
     });
   }
 
+  updateCellSize(value) {
+    this.setState({ cellSize: value });
+    this.resizeWorld();
+  }
+
   render() {
     return (
       <div id="app">
@@ -104,17 +105,20 @@ class App extends React.Component {
           tickDelay={this.state.tickDelay}
           playing={this.state.timerId !== null}
           playPause={this.playPause.bind(this)}
-          faster={this.faster.bind(this)}
-          slower={this.slower.bind(this)}
           isOpen={this.state.menuIsOpen}
           step={this.step.bind(this)}
           loadRle={this.loadRle.bind(this)}
           clear={this.clearWorld.bind(this)}
+          biggerCells={() => this.changeCellSize(1)}
+          smallerCells={() => this.changeCellSize(-1)}
+          updateSpeed={this.updateSpeed.bind(this)}
+          updateCellSize={this.updateCellSize.bind(this)}
         />
         <Playground
           world={this.state.world}
           wasm={this.props.wasm}
           toggleCell={this.toggleCell.bind(this)}
+          cellSize={this.state.cellSize}
         />
       </div>
     );
