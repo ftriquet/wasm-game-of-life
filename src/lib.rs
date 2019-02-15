@@ -5,6 +5,7 @@ use console_error_panic_hook;
 use wasm_bindgen::prelude::*;
 
 use std::collections::HashSet;
+use std::fmt::Write;
 
 // {{{ parsing
 mod parsing {
@@ -510,6 +511,30 @@ fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
     }
 }
 
+pub struct FirstN<'a, I> {
+    inner: &'a mut I,
+    n: usize,
+    count: usize
+}
+
+impl<'a, I: 'a + Iterator> Iterator for FirstN<'a, I> {
+    type Item = <I as Iterator>::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count >= self.n { return None; }
+        self.count += 1;
+        self.inner.next()
+    }
+}
+
+fn first_n<I>(i: &mut I, n: usize) -> FirstN<I> {
+    FirstN {
+        inner: i,
+        n,
+        count: 0
+    }
+}
+
 #[wasm_bindgen]
 impl World {
     pub fn load_string(&mut self, pattern: String) {
@@ -522,6 +547,67 @@ impl World {
                 log("Failed to parse rle string");
             }
         }
+    }
+
+    pub fn export_rle(&self) -> String {
+        let first_line_idx = self.cells.iter().position(|c| *c == Cell::Alive);
+        if let None = first_line_idx {
+            return "".to_string();
+        }
+        let (first_line, _) = self.from_index(first_line_idx.unwrap() as i32);
+
+        let last_line_idx = self.cells.iter().rposition(|c| *c == Cell::Alive);
+        if let None = last_line_idx {
+            return "".to_string();
+        }
+        let (last_line, _) = self.from_index(last_line_idx.unwrap() as i32);
+
+        let mut first_column = self.width;
+        let mut last_column = 0;
+
+        let mut cells = self.cells.iter();
+        for _ in 0..self.height  {
+            let mut row = first_n(&mut cells, self.width as usize).enumerate();
+            let first_col_alive = row.find(|(_, c)| **c == Cell::Alive);
+            let last_col_alive = row.filter(|(_, c)| **c == Cell::Alive).last().or(first_col_alive);
+            if let Some((pos, _)) = first_col_alive {
+                first_column = ::std::cmp::min(first_column, pos as i32);
+            }
+            if let Some((pos, _)) = last_col_alive {
+                last_column = ::std::cmp::max(last_column, pos as i32);
+            }
+        }
+
+        let mut buff = String::new();
+
+        write!(&mut buff, "x = {}, y = {}\n", last_column - first_column + 1, last_line - first_line + 1);
+
+        let mut cells = self.cells.iter().skip((first_line * self.width) as usize);
+        for _ in first_line..=last_line {
+            let mut row = first_n(&mut cells, self.width as usize).skip(first_column as usize).peekable();
+            while let Some(cell) = row.next() {
+                let mut n = 1;
+                while let Some(&c) = row.peek() {
+                    if c == cell {
+                        n += 1;
+                        row.next();
+                    } else {
+                        break;
+                    }
+                }
+                let c = match cell {
+                    Cell::Alive => 'o',
+                    Cell::Dead => 'b',
+                };
+                if *cell == Cell::Alive || row.peek().is_some() {
+                    write!(&mut buff, "{}{}", n, c);
+                }
+            }
+            write!(&mut buff, "{}", '$');
+        }
+        write!(&mut buff, "{}", '!');
+
+        buff
     }
 
     pub fn resize(&mut self, width: i32, height: i32) {

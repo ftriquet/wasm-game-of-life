@@ -51,7 +51,8 @@ class LoadModal extends React.Component {
           onClose={this.props.onClose}
         >
           <div style={getModalStyle()} className={classes.paper}>
-            <textarea ref={this.textareaRef}
+            <textarea
+              ref={this.textareaRef}
               style={{ resize: "none", width: "600px", height: "300px" }}
             />
             <div

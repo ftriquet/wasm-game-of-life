@@ -1,6 +1,7 @@
 import React from "react";
 import Playground from "../playground";
 import Panel from "../panel";
+import Toast from "../toast";
 const MIN_DELAY = 2;
 const DEFAULT_CELL_SIZE = 5;
 const MIN_CELL_SIZE = 2;
@@ -15,23 +16,24 @@ class App extends React.Component {
       tickDelay: 20,
       timerId: null,
       cellSize: DEFAULT_CELL_SIZE,
+      openToast: false
     };
   }
 
   resizeWorld() {
     this.setState(state => {
       const { world, cellSize } = state;
-      const width = Math.floor((window.innerWidth) / cellSize);
+      const width = Math.floor(window.innerWidth / cellSize);
       const height = Math.floor((window.innerHeight - 48) / cellSize);
       world.resize(width, height);
       world.width = width;
       world.height = height;
       return { world };
-    })
+    });
   }
 
   createWorld(cellSize) {
-    const width = Math.floor((window.innerWidth) / cellSize);
+    const width = Math.floor(window.innerWidth / cellSize);
     const height = Math.floor((window.innerHeight - 48) / cellSize);
     const world = World.new(width, height);
     world.width = width;
@@ -55,7 +57,7 @@ class App extends React.Component {
   }
 
   updateSpeed(value) {
-    this.setState({ tickDelay: 2000 / value })
+    this.setState({ tickDelay: 2000 / value });
   }
 
   tick() {
@@ -98,6 +100,29 @@ class App extends React.Component {
     this.resizeWorld();
   }
 
+  onExport() {
+    navigator.clipboard
+      .writeText(this.state.world.export_rle())
+      .then(() => {
+        this.openToast();
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
+
+  openToast() {
+    this.setState({ openToast: true });
+  }
+
+  closeToast(event, reason) {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    this.setState({ openToast: false });
+  }
+
   render() {
     return (
       <div id="app">
@@ -113,12 +138,18 @@ class App extends React.Component {
           smallerCells={() => this.changeCellSize(-1)}
           updateSpeed={this.updateSpeed.bind(this)}
           updateCellSize={this.updateCellSize.bind(this)}
+          onExport={this.onExport.bind(this)}
         />
         <Playground
           world={this.state.world}
           wasm={this.props.wasm}
           toggleCell={this.toggleCell.bind(this)}
           cellSize={this.state.cellSize}
+        />
+        <Toast
+          open={this.state.openToast}
+          onClose={this.closeToast.bind(this)}
+          message="Pattern copied to clipboard!"
         />
       </div>
     );
