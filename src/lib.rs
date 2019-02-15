@@ -10,9 +10,8 @@ use std::fmt::Write;
 // {{{ parsing
 mod parsing {
     use nom::{
-        line_ending, take_until_and_consume,
-        alt, do_parse, many0, many1, map, named, one_of, opt, space, tag,
-        terminated, types::CompleteStr,
+        alt, do_parse, line_ending, many0, many1, map, named, one_of, opt, space, tag,
+        take_until_and_consume, terminated, types::CompleteStr,
     };
 
     // {{{ types
@@ -20,7 +19,7 @@ mod parsing {
     pub enum RleTag {
         NextLine,
         Dead,
-        Alive
+        Alive,
     }
 
     #[derive(Debug, PartialEq)]
@@ -168,9 +167,18 @@ mod parsing {
         fn valid_first_line_test() {
             let expectations = vec![
                 ("x = 3, y = 2\n", RleFirstLine(3, 2)),
-                ("x = 100, y = 34, rules = adknajkdn ansdnaslkdn ksnd\n", RleFirstLine(100, 34)),
-                ("x =     100,        y    = 34, rules = adknajkdn ansdnaslkdn ksnd\n", RleFirstLine(100, 34)),
-                ("x=100,y=34,rules=adknajkdnansdnaslkdnksnd\n", RleFirstLine(100, 34)),
+                (
+                    "x = 100, y = 34, rules = adknajkdn ansdnaslkdn ksnd\n",
+                    RleFirstLine(100, 34),
+                ),
+                (
+                    "x =     100,        y    = 34, rules = adknajkdn ansdnaslkdn ksnd\n",
+                    RleFirstLine(100, 34),
+                ),
+                (
+                    "x=100,y=34,rules=adknajkdnansdnaslkdnksnd\n",
+                    RleFirstLine(100, 34),
+                ),
             ];
 
             expectations.into_iter().for_each(|(input, output)| {
@@ -187,11 +195,13 @@ mod parsing {
                 ("abcdef", "abcdef"),
             ];
 
-            use nom::Err as NomErr;
             use nom::simple_errors::Context;
+            use nom::Err as NomErr;
 
             expectations.into_iter().for_each(|(input, output)| {
-                if let Err(NomErr::Error(Context::Code(CompleteStr(o), _))) = rle_first_line(input.into()) {
+                if let Err(NomErr::Error(Context::Code(CompleteStr(o), _))) =
+                    rle_first_line(input.into())
+                {
                     assert!(o.starts_with(output));
                 } else {
                     panic!("{} should not be a valid input", input);
@@ -386,8 +396,8 @@ mod parsing {
 
         #[test]
         fn all_patterns_test() {
+            use std::fs;
             use std::io::{self, Read};
-            use std::fs::{self};
             use std::path::Path;
 
             fn visit_dirs<F: Fn(&Path)>(dir: &Path, cb: F) -> io::Result<()> {
@@ -406,11 +416,13 @@ mod parsing {
             visit_dirs(Path::new("patterns"), |path| {
                 let mut f = fs::File::open(path).unwrap();
                 let mut s = String::new();
-                f.read_to_string(&mut s).expect(&format!("Unable to read file {:?}", path));
+                f.read_to_string(&mut s)
+                    .expect(&format!("Unable to read file {:?}", path));
                 if let Err(e) = parse_rle(s.as_str().into()) {
                     panic!("Failed to parse {:?}: {:?}", path, e);
                 }
-            }).unwrap();
+            })
+            .unwrap();
         }
 
         #[test]
@@ -424,13 +436,15 @@ mod parsing {
         3ob3o$bobobob2$!
         ";
             let x = parse_rle(complete.into());
-            let rle = Rle{
+            let rle = Rle {
                 comments: vec![
                     RleComment::Name("Smiley".to_string()),
                     RleComment::Author("Achim Flammenkamp".to_string()),
                     RleComment::Comment("A period 8 oscillator found in July 1994.".to_string()),
-                    RleComment::Comment("www.conwaylife.com/wiki/index.php?title=Smiley".to_string()),
-                    RleComment::Coordinates(-12, 30)
+                    RleComment::Comment(
+                        "www.conwaylife.com/wiki/index.php?title=Smiley".to_string(),
+                    ),
+                    RleComment::Coordinates(-12, 30),
                 ],
                 size: RleFirstLine(7, 7),
                 content: vec![
@@ -446,7 +460,7 @@ mod parsing {
                     RleTagSequence(1, RleTag::Alive),
                     RleTagSequence(1, RleTag::Dead),
                     RleTagSequence(2, RleTag::NextLine),
-                ]
+                ],
             };
             assert_eq!(x.map(|r| r.1), Ok(rle));
         }
@@ -455,7 +469,7 @@ mod parsing {
 }
 //  }}}
 
-use std::hash::{Hasher, BuildHasher};
+use std::hash::{BuildHasher, Hasher};
 
 pub struct CustomHasher(u64);
 impl Hasher for CustomHasher {
@@ -503,25 +517,26 @@ pub enum Cell {
     Alive = 1,
 }
 
-
 fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
     match o {
         Some(Some(t)) => Some(t),
-        _ => None
+        _ => None,
     }
 }
 
 pub struct FirstN<'a, I> {
     inner: &'a mut I,
     n: usize,
-    count: usize
+    count: usize,
 }
 
 impl<'a, I: 'a + Iterator> Iterator for FirstN<'a, I> {
     type Item = <I as Iterator>::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.count >= self.n { return None; }
+        if self.count >= self.n {
+            return None;
+        }
         self.count += 1;
         self.inner.next()
     }
@@ -531,7 +546,7 @@ fn first_n<I>(i: &mut I, n: usize) -> FirstN<I> {
     FirstN {
         inner: i,
         n,
-        count: 0
+        count: 0,
     }
 }
 
@@ -566,10 +581,13 @@ impl World {
         let mut last_column = 0;
 
         let mut cells = self.cells.iter();
-        for _ in 0..self.height  {
+        for _ in 0..self.height {
             let mut row = first_n(&mut cells, self.width as usize).enumerate();
             let first_col_alive = row.find(|(_, c)| **c == Cell::Alive);
-            let last_col_alive = row.filter(|(_, c)| **c == Cell::Alive).last().or(first_col_alive);
+            let last_col_alive = row
+                .filter(|(_, c)| **c == Cell::Alive)
+                .last()
+                .or(first_col_alive);
             if let Some((pos, _)) = first_col_alive {
                 first_column = ::std::cmp::min(first_column, pos as i32);
             }
@@ -580,11 +598,19 @@ impl World {
 
         let mut buff = String::new();
 
-        write!(&mut buff, "x = {}, y = {}\n", last_column - first_column + 1, last_line - first_line + 1);
+        write!(
+            &mut buff,
+            "x = {}, y = {}\n",
+            last_column - first_column + 1,
+            last_line - first_line + 1
+        )
+        .ok();
 
         let mut cells = self.cells.iter().skip((first_line * self.width) as usize);
         for _ in first_line..=last_line {
-            let mut row = first_n(&mut cells, self.width as usize).skip(first_column as usize).peekable();
+            let mut row = first_n(&mut cells, self.width as usize)
+                .skip(first_column as usize)
+                .peekable();
             while let Some(cell) = row.next() {
                 let mut n = 1;
                 while let Some(&c) = row.peek() {
@@ -600,12 +626,12 @@ impl World {
                     Cell::Dead => 'b',
                 };
                 if *cell == Cell::Alive || row.peek().is_some() {
-                    write!(&mut buff, "{}{}", n, c);
+                    write!(&mut buff, "{}{}", n, c).ok();
                 }
             }
-            write!(&mut buff, "{}", '$');
+            write!(&mut buff, "{}", '$').ok();
         }
-        write!(&mut buff, "{}", '!');
+        write!(&mut buff, "{}", '!').ok();
 
         buff
     }
@@ -624,12 +650,14 @@ impl World {
     }
 
     fn load_rle(&mut self, rle: parsing::Rle) {
-        let coords = rle.comments.iter().map(|c| {
-            match c {
+        let coords = rle
+            .comments
+            .iter()
+            .map(|c| match c {
                 parsing::RleComment::Coordinates(x, y) => Some((*x, *y)),
-                _ => None
-            }
-        }).find(Option::is_some);
+                _ => None,
+            })
+            .find(Option::is_some);
         let (x, y) = flatten(coords).unwrap_or((0, 0));
 
         let origin_x = self.width / 2;
@@ -640,26 +668,22 @@ impl World {
 
         let mut i = top_left_x;
         let mut j = top_left_y;
-        rle.content.iter().for_each(|seq| {
-            match seq {
-                parsing::RleTagSequence(count, parsing::RleTag::NextLine) => {
-                    (0..*count).for_each(|_| {
-                        j += 1;
-                    });
-                    i = top_left_x;
-                },
-                parsing::RleTagSequence(count, state) => {
-                    (0..*count).for_each(|_| {
-                        let cell = match state {
-                            parsing::RleTag::Dead => Cell::Dead,
-                            parsing::RleTag::Alive => Cell::Alive,
-                            _ => unreachable!()
-                        };
-                        self.set_cell(j, i, cell);
-                        i += 1;
-                    })
-                }
+        rle.content.iter().for_each(|seq| match seq {
+            parsing::RleTagSequence(count, parsing::RleTag::NextLine) => {
+                (0..*count).for_each(|_| {
+                    j += 1;
+                });
+                i = top_left_x;
             }
+            parsing::RleTagSequence(count, state) => (0..*count).for_each(|_| {
+                let cell = match state {
+                    parsing::RleTag::Dead => Cell::Dead,
+                    parsing::RleTag::Alive => Cell::Alive,
+                    _ => unreachable!(),
+                };
+                self.set_cell(j, i, cell);
+                i += 1;
+            }),
         })
     }
 
@@ -749,7 +773,10 @@ impl World {
     }
 
     pub fn next_tick(&mut self) {
-        let mut cells_to_check = HashSet::with_capacity_and_hasher((self.width * self.height) as usize, CustomHasherBuilder);
+        let mut cells_to_check = HashSet::with_capacity_and_hasher(
+            (self.width * self.height) as usize,
+            CustomHasherBuilder,
+        );
         self.changed_cells.iter().for_each(|idx| {
             cells_to_check.insert(*idx);
             cells_to_check.insert(*idx - 1);
@@ -765,7 +792,7 @@ impl World {
         });
 
         if cells_to_check.is_empty() {
-            (0..(self.width*self.height)).for_each(|i| {
+            (0..(self.width * self.height)).for_each(|i| {
                 cells_to_check.insert(i);
             });
         }
