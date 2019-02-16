@@ -495,8 +495,6 @@ impl BuildHasher for CustomHasherBuilder {
 extern "C" {
     #[wasm_bindgen(js_namespace=console)]
     fn log(s: &str);
-    #[wasm_bindgen(js_namespace=Math)]
-    fn random() -> f64;
 }
 
 #[wasm_bindgen]
@@ -598,9 +596,13 @@ impl World {
 
         let mut buff = String::new();
 
+        let z_col = self.width / 2;
+        let z_row = self.height / 2;
         write!(
             &mut buff,
-            "x = {}, y = {}\n",
+            "#R {} {}\nx = {}, y = {}\n",
+            first_column - z_col,
+            first_line - z_row,
             last_column - first_column + 1,
             last_line - first_line + 1
         )

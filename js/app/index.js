@@ -3,7 +3,7 @@ import Playground from "../playground";
 import Panel from "../panel";
 import Toast from "../toast";
 const MIN_DELAY = 2;
-const DEFAULT_CELL_SIZE = 5;
+const DEFAULT_CELL_SIZE = 10;
 const MIN_CELL_SIZE = 2;
 const MAX_CELL_SIZE = 15;
 
