@@ -8,7 +8,7 @@ const getCells = (wasm, world) => {
   const cells = new Uint32Array(
     wasm.memory.buffer,
     cellsPtr,
-    world.width * world.height
+    world.width() * world.height()
   );
   return cells;
 };
@@ -25,12 +25,12 @@ const getChangedCells = (wasm, world) => {
 };
 
 const getIndex = (world, row, column) => {
-  return row * world.width + column;
+  return row * world.width() + column;
 };
 
 const fromIndex = (world, idx) => {
-  const col = idx % world.width;
-  const row = Math.floor(idx / world.width);
+  const col = idx % world.width();
+  const row = Math.floor(idx / world.width());
   return [row, col];
 };
 
@@ -62,8 +62,8 @@ const drawCells = (ctx, wasm, world) => {
   const cells = getCells(wasm, world);
   ctx.beginPath();
 
-  for (let row = 0; row < world.height; row++) {
-    for (let col = 0; col < world.width; col++) {
+  for (let row = 0; row < world.height(); row++) {
+    for (let col = 0; col < world.width(); col++) {
       const index = getIndex(world, row, col);
       const cell = cells[index];
 
@@ -129,8 +129,8 @@ image-rendering: pixelated;
           id={"game-of-life-canvas"}
           onClick={this.handleClick.bind(this)}
           ref={this.canvasRef}
-          width={this.props.world.width * this.props.cellSize}
-          height={this.props.world.height * this.props.cellSize}
+          width={this.props.world.width() * this.props.cellSize}
+          height={this.props.world.height() * this.props.cellSize}
         />
       </div>
     );

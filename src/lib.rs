@@ -2,6 +2,8 @@
 
 use console_error_panic_hook;
 
+use image;
+use image::GenericImageView;
 use wasm_bindgen::prelude::*;
 
 use std::collections::HashSet;
@@ -515,6 +517,20 @@ pub enum Cell {
     Alive = 1,
 }
 
+use image::Pixel;
+impl std::convert::From<image::Rgba<u8>> for Cell {
+    fn from(a: image::Rgba<u8>) -> Self {
+        let l = a.to_luma();
+        if l.data[0] < 255 / 2 {
+            // log("alive in image");
+            Cell::Alive
+        } else {
+            // log("dead in image");
+            Cell::Dead
+        }
+    }
+}
+
 fn flatten<T>(o: Option<Option<T>>) -> Option<T> {
     match o {
         Some(Some(t)) => Some(t),
@@ -560,6 +576,14 @@ impl World {
                 log("Failed to parse rle string");
             }
         }
+    }
+
+    pub fn width(&self) -> i32 {
+        self.width
+    }
+
+    pub fn height(&self) -> i32 {
+        self.height
     }
 
     pub fn export_rle(&self) -> String {
@@ -865,5 +889,17 @@ impl World {
             generations: 0,
             changed_cells: Vec::new(),
         }
+    }
+
+    pub fn from_image(data: Vec<u8>) -> World {
+        let im = image::load_from_memory(&data)
+            .expect("Invalid image data")
+            .grayscale();
+        let mut world = World::new(im.width() as i32, im.height() as i32);
+        for pixel in im.pixels() {
+            let (x, y, pix) = pixel;
+            world.set_cell(y as i32, x as i32, Cell::from(pix));
+        }
+        world
     }
 }

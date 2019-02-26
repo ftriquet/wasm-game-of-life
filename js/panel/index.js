@@ -9,6 +9,37 @@ import Typography from "@material-ui/core/Typography";
 import LoadModal from "../loadModal";
 
 import { withStyles } from "@material-ui/core/styles";
+
+class ImageLoader extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  onLoad(evt) {
+    const files = evt.target.files;
+    const file = files[0];
+
+    if (!file.type.match('image.*')) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => this.props.onImageLoad(e.target.result);
+    reader.readAsArrayBuffer(file);
+  }
+
+  render() {
+    return (
+      <div>
+        <Button color="inherit" size="small">
+          Load Image
+        </Button>
+        <input type="file" id="files" name="files[]" multiple onChange={this.onLoad.bind(this)}/>
+      </div>
+    );
+  }
+}
+
 const styles = {
   root: {
     width: 100
@@ -138,6 +169,7 @@ class Panel extends React.Component {
               baseValue={8}
               onChange={this.props.updateCellSize}
             />
+            <ImageLoader onImageLoad={this.props.onImageLoad}/>
             {this.state.modalIsOpen && (
               <LoadModal
                 onSubmit={this.onModalSubmit.bind(this)}

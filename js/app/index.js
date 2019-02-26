@@ -26,8 +26,6 @@ class App extends React.Component {
       const width = Math.floor(window.innerWidth / cellSize);
       const height = Math.floor((window.innerHeight - 48) / cellSize);
       world.resize(width, height);
-      world.width = width;
-      world.height = height;
       return { world };
     });
   }
@@ -36,8 +34,6 @@ class App extends React.Component {
     const width = Math.floor(window.innerWidth / cellSize);
     const height = Math.floor((window.innerHeight - 48) / cellSize);
     const world = World.new(width, height);
-    world.width = width;
-    world.height = height;
     return world;
   }
 
@@ -47,6 +43,8 @@ class App extends React.Component {
 
   playPause() {
     this.setState(state => {
+      console.log(state.world.width());
+      console.log(state.world.height());
       if (state.timerId) {
         clearTimeout(state.timerId);
         return { timerId: null };
@@ -123,6 +121,17 @@ class App extends React.Component {
     this.setState({ openToast: false });
   }
 
+  onImageLoad(buff) {
+    console.log(buff);
+    const arr = new Uint8Array(buff);
+    console.log(arr);
+    let world = World.from_image(arr);
+    console.log(world);
+    console.log(world.height());
+    console.log(world.width());
+    this.setState({ world });
+  }
+
   render() {
     return (
       <div id="app">
@@ -139,6 +148,7 @@ class App extends React.Component {
           updateSpeed={this.updateSpeed.bind(this)}
           updateCellSize={this.updateCellSize.bind(this)}
           onExport={this.onExport.bind(this)}
+          onImageLoad={this.onImageLoad.bind(this)}
         />
         <Playground
           world={this.state.world}
