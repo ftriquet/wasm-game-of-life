@@ -15,4 +15,4 @@ rand = "0.6.5"
 [dependencies.image]
 version = "0.21.0"
 default_features = false
-features = ["jpeg", "png"]
+features = ["jpeg", "png_codec"]

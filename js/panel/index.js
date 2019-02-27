@@ -15,11 +15,16 @@ class ImageLoader extends React.Component {
     super(props);
   }
 
+  isSupported(type) {
+    return ['image/jpeg', 'image/png'].includes(type)
+  }
+
   onLoad(evt) {
     const files = evt.target.files;
     const file = files[0];
 
-    if (!file.type.match('image.*')) {
+    if (!this.isSupported(file.type)) {
+      console.log(`Unsupported file type: ${file.type}`)
       return;
     }
 

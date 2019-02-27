@@ -122,13 +122,8 @@ class App extends React.Component {
   }
 
   onImageLoad(buff) {
-    console.log(buff);
     const arr = new Uint8Array(buff);
-    console.log(arr);
     let world = World.from_image(arr);
-    console.log(world);
-    console.log(world.height());
-    console.log(world.width());
     this.setState({ world });
   }
 
