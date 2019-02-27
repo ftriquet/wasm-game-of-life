@@ -25,6 +25,7 @@ class ImageLoader extends React.Component {
 
     if (!this.isSupported(file.type)) {
       console.log(`Unsupported file type: ${file.type}`)
+      this.props.onImageLoad(null, `Unsupported file type: ${file.type}`);
       return;
     }
 

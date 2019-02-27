@@ -16,7 +16,7 @@ class App extends React.Component {
       tickDelay: 20,
       timerId: null,
       cellSize: DEFAULT_CELL_SIZE,
-      openToast: false
+      openExportPatternSuccessToast: false
     };
   }
 
@@ -102,26 +102,42 @@ class App extends React.Component {
     navigator.clipboard
       .writeText(this.state.world.export_rle())
       .then(() => {
-        this.openToast();
+        this.openExportPatternSuccessToast();
       })
       .catch(e => {
         console.log(e);
       });
   }
 
-  openToast() {
-    this.setState({ openToast: true });
+  openExportPatternSuccessToast() {
+    this.setState({ openExportPatternSuccessToast: true });
   }
 
-  closeToast(event, reason) {
+  openImageLoadWarningToast() {
+    this.setState({ openImageLoadWarningToast: true });
+  }
+
+  closeExportPatternSuccessToast(event, reason) {
     if (reason === "clickaway") {
       return;
     }
 
-    this.setState({ openToast: false });
+    this.setState({ openExportPatternSuccessToast: false });
   }
 
-  onImageLoad(buff) {
+  closeImageLoadWarningToast(event, reason) {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    this.setState({ openImageLoadWarningToast: false });
+  }
+
+  onImageLoad(buff, err) {
+    if (err) {
+      this.openImageLoadWarningToast();
+      return;
+    }
     const arr = new Uint8Array(buff);
     let world = World.from_image(arr);
     this.setState({ world });
@@ -152,9 +168,16 @@ class App extends React.Component {
           cellSize={this.state.cellSize}
         />
         <Toast
-          open={this.state.openToast}
-          onClose={this.closeToast.bind(this)}
+          variant="success"
+          open={this.state.openExportPatternSuccessToast}
+          onClose={this.closeExportPatternSuccessToast.bind(this)}
           message="Pattern copied to clipboard!"
+        />
+        <Toast
+          variant="warning"
+          open={this.state.openImageLoadWarningToast}
+          onClose={this.closeImageLoadWarningToast.bind(this)}
+          message="Unsupported file type"
         />
       </div>
     );

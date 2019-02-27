@@ -12,6 +12,9 @@ const toastContentStyles = theme => ({
   success: {
     backgroundColor: green[600]
   },
+  warning: {
+    backgroundColor: theme.palette.error.dark,
+  },
   icon: {
     opacity: 0.9,
     fontSize: 20
@@ -28,11 +31,10 @@ class _ToastContent extends React.Component {
   }
 
   render() {
-    const { classes, message, onClose } = this.props;
-
+    const { variant, classes, message, onClose, color } = this.props;
     return (
       <SnackbarContent
-        className={classes.success}
+        className={classes[variant]}
         message={
           <span className={classes.message}>
             <Icon className={classes.icon} />
@@ -68,7 +70,7 @@ class _Toast extends React.Component {
   }
 
   render() {
-    const { open, classes, message, onClose } = this.props;
+    const { variant, open, classes, message, onClose } = this.props;
     return (
       <Snackbar
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
@@ -77,6 +79,7 @@ class _Toast extends React.Component {
         onClose={onClose}
       >
         <ToastContent
+          variant={variant}
           onClose={onClose}
           className={classes.margin}
           message={message}
