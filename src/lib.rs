@@ -6,32 +6,10 @@ use image;
 use image::GenericImageView;
 use wasm_bindgen::prelude::*;
 
-use std::collections::HashSet;
 use std::fmt::Write;
 
+mod number_hashset;
 mod parser;
-
-use std::hash::{BuildHasher, Hasher};
-
-pub struct CustomHasher(u64);
-impl Hasher for CustomHasher {
-    fn write(&mut self, bytes: &[u8]) {
-        self.0 = unsafe { *(bytes.as_ptr() as *const u64) }
-    }
-
-    fn finish(&self) -> u64 {
-        self.0
-    }
-}
-
-pub struct CustomHasherBuilder;
-
-impl BuildHasher for CustomHasherBuilder {
-    type Hasher = CustomHasher;
-    fn build_hasher(&self) -> Self::Hasher {
-        CustomHasher(0)
-    }
-}
 
 #[wasm_bindgen]
 extern "C" {
@@ -339,10 +317,7 @@ impl World {
     }
 
     pub fn next_tick(&mut self) {
-        let mut cells_to_check = HashSet::with_capacity_and_hasher(
-            (self.width * self.height) as usize,
-            CustomHasherBuilder,
-        );
+        let mut cells_to_check = number_hashset::hashset((self.width * self.height) as usize);
         self.changed_cells.iter().for_each(|idx| {
             cells_to_check.insert(*idx);
             cells_to_check.insert(*idx - 1);
