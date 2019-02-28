@@ -58,24 +58,6 @@ const drawChangedCells = (ctx, wasm, world, cellSize) => {
   ctx.stroke();
 };
 
-const drawCells = (ctx, wasm, world) => {
-  const cells = getCells(wasm, world);
-  ctx.beginPath();
-
-  for (let row = 0; row < world.height(); row++) {
-    for (let col = 0; col < world.width(); col++) {
-      const index = getIndex(world, row, col);
-      const cell = cells[index];
-
-      ctx.fillStyle = cell === 0 ? DEAD_COLOR : ALIVE_COLOR;
-
-      ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize, cellSize);
-    }
-  }
-
-  ctx.stroke();
-};
-
 class Playground extends React.Component {
   constructor(props) {
     super(props);

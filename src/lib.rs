@@ -11,6 +11,13 @@ use std::fmt::Write;
 mod number_hashset;
 mod parser;
 
+struct Rect<N> {
+    x: N,
+    y: N,
+    width: N,
+    height: N,
+}
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace=console)]
@@ -40,10 +47,8 @@ impl std::convert::From<image::Rgba<u8>> for Cell {
     fn from(a: image::Rgba<u8>) -> Self {
         let l = a.to_luma();
         if l.data[0] < 255 / 2 {
-            // log("alive in image");
             Cell::Alive
         } else {
-            // log("dead in image");
             Cell::Dead
         }
     }
@@ -104,20 +109,22 @@ impl World {
         self.height
     }
 
-    pub fn export_rle(&self) -> String {
+    fn pattern_boundaries(&self) -> Option<Rect<usize>> {
         let first_line_idx = self.cells.iter().position(|c| *c == Cell::Alive);
         if let None = first_line_idx {
-            return "".to_string();
+            return None;
         }
         let (first_line, _) = self.from_index(first_line_idx.unwrap() as i32);
+        let first_line = first_line as usize;
 
         let last_line_idx = self.cells.iter().rposition(|c| *c == Cell::Alive);
         if let None = last_line_idx {
-            return "".to_string();
+            return None;
         }
         let (last_line, _) = self.from_index(last_line_idx.unwrap() as i32);
+        let last_line = last_line as usize;
 
-        let mut first_column = self.width;
+        let mut first_column = self.width as usize;
         let mut last_column = 0;
 
         let mut cells = self.cells.iter();
@@ -129,31 +136,52 @@ impl World {
                 .last()
                 .or(first_col_alive);
             if let Some((pos, _)) = first_col_alive {
-                first_column = ::std::cmp::min(first_column, pos as i32);
+                first_column = ::std::cmp::min(first_column, pos);
             }
             if let Some((pos, _)) = last_col_alive {
-                last_column = ::std::cmp::max(last_column, pos as i32);
+                last_column = ::std::cmp::max(last_column, pos);
             }
         }
+        Some(Rect {
+            x: first_column,
+            y: first_line,
+            width: last_column - first_column + 1,
+            height: last_line - first_line + 1,
+        })
+    }
+
+    pub fn export_rle(&self) -> String {
+        let pattern_boundaries = self.pattern_boundaries();
+
+        if pattern_boundaries.is_none() {
+            return "".to_string();
+        }
+        let bounds = pattern_boundaries.unwrap();
 
         let mut buff = String::new();
 
-        let z_col = self.width / 2;
-        let z_row = self.height / 2;
+        let center_col = self.width / 2;
+        let center_row = self.height / 2;
         write!(
             &mut buff,
             "#R {} {}\nx = {}, y = {}\n",
-            first_column - z_col,
-            first_line - z_row,
-            last_column - first_column + 1,
-            last_line - first_line + 1
+            bounds.x as i32 - center_col,
+            bounds.y as i32 - center_row,
+            bounds.width,
+            bounds.height
         )
         .ok();
 
-        let mut cells = self.cells.iter().skip((first_line * self.width) as usize);
-        for _ in first_line..=last_line {
+        self.write_pattern(bounds, &mut buff);
+
+        buff
+    }
+
+    fn write_pattern<W: std::fmt::Write>(&self, bounds: Rect<usize>, mut w: W) -> () {
+        let mut cells = self.cells.iter().skip(bounds.y * self.width as usize);
+        for _ in bounds.y..=(bounds.y + bounds.height) {
             let mut row = first_n(&mut cells, self.width as usize)
-                .skip(first_column as usize)
+                .skip(bounds.x)
                 .peekable();
             while let Some(cell) = row.next() {
                 let mut n = 1;
@@ -170,14 +198,12 @@ impl World {
                     Cell::Dead => 'b',
                 };
                 if *cell == Cell::Alive || row.peek().is_some() {
-                    write!(&mut buff, "{}{}", n, c).ok();
+                    write!(w, "{}{}", n, c).ok();
                 }
             }
-            write!(&mut buff, "{}", '$').ok();
+            write!(w, "{}", '$').ok();
         }
-        write!(&mut buff, "{}", '!').ok();
-
-        buff
+        write!(w, "{}", '!').ok();
     }
 
     pub fn resize(&mut self, width: i32, height: i32) {
@@ -249,7 +275,6 @@ impl World {
         self.cells[self.get_index(row, col) as usize]
     }
 
-    #[inline(always)]
     pub fn set_cell(&mut self, row: i32, col: i32, t: Cell) {
         let idx = self.get_index(row, col);
         self.changed_cells.push(idx);
@@ -257,11 +282,6 @@ impl World {
         self.cells[idx] = t;
     }
 
-    pub fn generations(&self) -> u32 {
-        self.generations
-    }
-
-    #[inline(always)]
     fn set(&mut self, row: i32, col: i32, t: Cell) {
         let idx = self.get_index(row, col) as usize;
         self.cache[idx] = t;
@@ -316,6 +336,10 @@ impl World {
         self.changed_cells.clear();
     }
 
+    fn get_idx(&self, idx: usize) -> Cell {
+        self.cells[idx]
+    }
+
     pub fn next_tick(&mut self) {
         let mut cells_to_check = number_hashset::hashset((self.width * self.height) as usize);
         self.changed_cells.iter().for_each(|idx| {
@@ -333,15 +357,13 @@ impl World {
         });
 
         if cells_to_check.is_empty() {
-            (0..(self.width * self.height)).for_each(|i| {
-                cells_to_check.insert(i);
-            });
+            cells_to_check.extend(0..(self.width * self.height));
         }
 
         let mut new_changed_cells = Vec::new();
         cells_to_check.iter().for_each(|idx| {
             let (row, col) = self.from_index(*idx);
-            let cell = self.get(row, col);
+            let cell = self.get_idx(*idx as usize);
             let neighbors = self.alive_neighbors(row, col);
             let next_cell = match (cell, neighbors) {
                 (Cell::Alive, 2) | (_, 3) => Cell::Alive,
@@ -366,29 +388,6 @@ impl World {
         let row = idx / self.width;
         let col = idx % self.width;
         (row, col)
-    }
-
-    pub fn tick(&mut self) {
-        for row in 0..self.height {
-            for col in 0..self.width {
-                let cell = self.get(row, col);
-                let alive_neighbors = self.alive_neighbors(row, col);
-                // Alive cell with 2 or 3 alive neighbors stays alive
-                // Dead cell with exactly 3 neighbors borns.
-                // Other cells die fomr over or under population.
-                let next_cell = match (cell, alive_neighbors) {
-                    (Cell::Alive, 2) | (_, 3) => Cell::Alive,
-                    _ => Cell::Dead,
-                };
-                if cell != next_cell {
-                    self.changed_cells.push(self.get_index(row, col));
-                }
-                self.set(row, col, next_cell);
-            }
-        }
-        self.generations += 1;
-
-        ::std::mem::swap(&mut self.cells, &mut self.cache);
     }
 
     pub fn new(width: i32, height: i32) -> World {
