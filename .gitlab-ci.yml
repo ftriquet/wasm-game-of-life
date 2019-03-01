@@ -7,4 +7,4 @@ deploy:
     - bash build.sh
     - yarn
     - yarn build:production
-    - cp -r * /home/admin/www/life
+    - $DEPLOY
