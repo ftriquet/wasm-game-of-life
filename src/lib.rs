@@ -231,8 +231,8 @@ impl World {
         let origin_x = self.width / 2;
         let origin_y = self.height / 2;
 
-        let top_left_x = origin_x - x / 2;
-        let top_left_y = origin_y - y / 2;
+        let top_left_x = origin_x + x - (rle.size.0 / 2) as i32;
+        let top_left_y = origin_y + y - (rle.size.1 / 2) as i32;
 
         let mut i = top_left_x;
         let mut j = top_left_y;
