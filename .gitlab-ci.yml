@@ -4,6 +4,7 @@ deploy:
     - rustup target add wasm32-unknown-unknown
     - rustup toolchain install nightly
     - rustup override set nightly
+    - cargo install --force wasm-bindgen-cli
     - bash build.sh
     - yarn
     - yarn build:production
