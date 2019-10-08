@@ -1,5 +1,3 @@
-// #![feature(custom_attribute)]
-
 use console_error_panic_hook;
 
 use image;
@@ -233,8 +231,8 @@ impl World {
         let origin_x = self.width / 2;
         let origin_y = self.height / 2;
 
-        let top_left_x = origin_x + x;
-        let top_left_y = origin_y + y;
+        let top_left_x = origin_x - x / 2;
+        let top_left_y = origin_y - y / 2;
 
         let mut i = top_left_x;
         let mut j = top_left_y;
