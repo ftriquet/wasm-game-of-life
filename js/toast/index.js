@@ -13,7 +13,7 @@ const toastContentStyles = theme => ({
     backgroundColor: green[600]
   },
   warning: {
-    backgroundColor: theme.palette.error.dark,
+    backgroundColor: theme.palette.error.dark
   },
   icon: {
     opacity: 0.9,

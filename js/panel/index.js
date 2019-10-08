@@ -16,7 +16,7 @@ class ImageLoader extends React.Component {
   }
 
   isSupported(type) {
-    return ['image/jpeg', 'image/png'].includes(type)
+    return ["image/jpeg", "image/png"].includes(type);
   }
 
   onLoad(evt) {
@@ -24,13 +24,13 @@ class ImageLoader extends React.Component {
     const file = files[0];
 
     if (!this.isSupported(file.type)) {
-      console.log(`Unsupported file type: ${file.type}`)
+      console.log(`Unsupported file type: ${file.type}`);
       this.props.onImageLoad(null, `Unsupported file type: ${file.type}`);
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => this.props.onImageLoad(e.target.result);
+    reader.onload = e => this.props.onImageLoad(e.target.result);
     reader.readAsArrayBuffer(file);
   }
 
@@ -40,7 +40,13 @@ class ImageLoader extends React.Component {
         <Button color="inherit" size="small">
           Load Image
         </Button>
-        <input type="file" id="files" name="files[]" multiple onChange={this.onLoad.bind(this)}/>
+        <input
+          type="file"
+          id="files"
+          name="files[]"
+          multiple
+          onChange={this.onLoad.bind(this)}
+        />
       </div>
     );
   }
@@ -175,7 +181,7 @@ class Panel extends React.Component {
               baseValue={8}
               onChange={this.props.updateCellSize}
             />
-            <ImageLoader onImageLoad={this.props.onImageLoad}/>
+            <ImageLoader onImageLoad={this.props.onImageLoad} />
             {this.state.modalIsOpen && (
               <LoadModal
                 onSubmit={this.onModalSubmit.bind(this)}
