@@ -13,6 +13,6 @@ nom = "4.2.0"
 rand = "0.6.5"
 
 [dependencies.image]
-version = "0.21.0"
+version = "0.22.5"
 default_features = false
 features = ["jpeg", "png_codec"]
